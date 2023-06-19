@@ -1,0 +1,49 @@
+{{ define "thumb_img" }}
+  <img
+    class="thumb thumb-unloaded"
+    src="{{ RootResolver .Path }}"
+    alt="{{ .ID }}"
+    width="{{ .Width }}"
+    height="{{ .Height }}"
+    loading="{{- if gt .Index 12 -}}
+      lazy
+    {{- else -}}
+      eager
+    {{- end -}}"
+  />
+{{ end }}
+
+{{ define "thumb" }}
+  <a href="{{ RootResolver .ID }}">
+    <figure>
+      <noscript>
+        {{ template "thumb_img" . }}
+        <style>
+          .overflow-wrapper {
+            display: none;
+          }
+          img.thumb.thumb-unloaded {
+            visibility: visible;
+          }
+        </style>
+      </noscript>
+      <div class="overflow-wrapper">
+        <img
+          src="{{ .PlaceholderURI }}"
+          class="placeholder placeholder-unloaded"
+          alt="{{ RootResolver .Photo.Path }} placeholder"
+        />
+        {{ template "thumb_img" . }}
+      </div>
+      <figcaption>
+        {{ if not .DateTime.IsZero }}
+          <time datetime="{{ .DateTime }}"
+            >{{ .DateTime.Format "Jan 2, 2006" }}</time
+          >
+        {{ else }}
+          <br />
+        {{ end }}
+      </figcaption>
+    </figure>
+  </a>
+{{ end }}

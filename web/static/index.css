@@ -1,0 +1,262 @@
+/* vars */
+
+:root {
+  --fg: #000000;
+  --fg-sub: #aaaaaa;
+  --bg: #ffffff;
+}
+
+/* global */
+
+body {
+  font-feature-settings: "liga";
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  margin: 0;
+  background-color: var(--bg);
+  height: 100%;
+  color: var(--fg);
+  font-family: "IBM Plex Sans";
+}
+@media screen and (max-width: 60rem) {
+  body {
+    font-size: 14px;
+  }
+}
+
+figcaption {
+  margin: 0.25rem 0 0;
+  color: var(--fg-sub);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+figure {
+  position: relative;
+  margin: 0;
+  overflow: hidden;
+  line-height: 0;
+}
+
+button {
+  outline: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+}
+
+/* index page */
+
+#site-title {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1em;
+}
+
+.index-layout {
+  margin: 0 auto;
+  padding: 1rem 8vw 5rem !important;
+  max-width: 120rem;
+}
+@media screen and (max-width: 60rem) {
+  .index-layout {
+    padding: 1rem clamp(1rem, 4vw, 4rem) 5rem !important;
+  }
+}
+
+.index-header {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 2rem;
+  padding: 2.5rem 0;
+}
+
+#viewmode-toggler {
+  color: var(--fg-sub);
+  text-align: inherit;
+}
+@media screen and (hover: hover) {
+  #viewmode-toggler:hover {
+    color: inherit;
+  }
+}
+#viewmode-toggler:active {
+  color: var(--fg-sub);
+}
+
+.overflow-wrapper {
+  position: relative;
+  overflow: hidden;
+  line-height: 0;
+}
+
+img.placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  filter: blur(0);
+  transition: all 1s ease;
+  width: 100%;
+}
+
+img.placeholder.placeholder-unloaded {
+  transform: scale(1.5);
+  opacity: 1;
+  filter: blur(16px);
+}
+
+img.thumb.thumb-unloaded {
+  visibility: hidden;
+}
+
+.thumbs-grid {
+  /* max-width: 60rem; */
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  gap: max(0.2rem, 1.5vw); /* 12.5rem */
+}
+
+.thumbs-grid figcaption {
+  display: none;
+}
+
+.thumbs-grid img.thumb {
+  aspect-ratio: 1;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.thumbs-grid img.placeholder {
+  aspect-ratio: 1;
+}
+
+.thumbs-gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: end;
+  gap: 8rem clamp(1rem, 4vw, 3rem);
+}
+@media screen and (max-width: 72rem) {
+  .thumbs-gallery {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 6rem;
+  }
+}
+@media screen and (max-width: 40rem) {
+  .thumbs-gallery {
+    grid-template-columns: 1fr;
+    row-gap: 4rem;
+  }
+}
+
+.thumbs-gallery figure {
+  line-height: inherit;
+}
+
+.thumbs-gallery img.thumb {
+  width: 100%;
+  height: auto;
+}
+
+.thumbs-gallery img.placeholder {
+}
+
+/* image page */
+
+.image-layout {
+  display: grid;
+  grid-template-columns: 1fr 3fr;
+  align-items: center;
+  justify-items: center;
+}
+@media screen and (max-width: 60rem) {
+  .image-layout {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: start;
+    height: auto;
+  }
+}
+
+.image-layout > .image-sidebar {
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  box-sizing: border-box;
+  padding: 2rem;
+  width: 100%;
+  height: 100%;
+}
+@media screen and (max-width: 60rem) {
+  .image-layout > .image-sidebar {
+    padding: 1rem;
+  }
+}
+
+.image-layout > .image-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  margin: auto;
+  padding: 2rem;
+  width: 100%;
+  height: 100vh;
+  height: 100svh;
+}
+@media screen and (max-width: 60rem) {
+  .image-layout > .image-wrapper {
+    padding: 3.5rem 1rem 2.5rem;
+    width: auto;
+  }
+}
+
+.image-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.exposure-settings {
+  display: flex;
+  flex-direction: row;
+  gap: 1ch;
+}
+
+.backlogo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: scaleY(-100%);
+  margin: 2rem;
+  color: var(--fg-sub);
+  font-size: 1.5em;
+}
+@media screen and (max-width: 60rem) {
+  .backlogo {
+    margin: 1rem;
+  }
+}
+@media screen and (hover: hover) {
+  .backlogo:hover {
+    color: inherit;
+  }
+}
+.backlogo:active {
+  color: var(--fg-sub);
+}
+
+img.full {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+}
