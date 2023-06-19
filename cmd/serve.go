@@ -17,6 +17,7 @@ func Serve(args []string) error {
 	var inUrl = flags.String("i", ".", "input")
 	var outDir = flags.String("o", "dist", "output directory")
 	var confPath = flags.String("c", "panchro.json", "configuration json file path")
+	var concurrency = flags.Int("concurrency", 128, "configuration json file path")
 	// var compressImages = flags.Bool("compress", true, "enable image compression")
 
 	flags.Usage = func() {
@@ -42,7 +43,7 @@ func Serve(args []string) error {
 
 	ps := photos.Photos{}
 
-	err = ps.Read(*inUrl, *outDir)
+	err = ps.Read(*inUrl, *outDir, *concurrency)
 	if err != nil {
 		return err
 	}

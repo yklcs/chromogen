@@ -68,7 +68,7 @@ func downloadPhoto(fpath string, r io.Reader) error {
 	return nil
 }
 
-func (ps *Photos) Read(bucketURL string, dir string) error {
+func (ps *Photos) Read(bucketURL string, dir string, concurrency int) error {
 	ctx := context.Background()
 	bucket, err := blob.OpenBucket(ctx, bucketURL)
 	if err != nil {
@@ -94,8 +94,12 @@ func (ps *Photos) Read(bucketURL string, dir string) error {
 	var wg sync.WaitGroup
 	wg.Add(len(keys))
 
+	sem := make(chan bool, concurrency)
+
 	for _, key := range keys {
+		sem <- true
 		go func(key string) {
+			defer func() { <-sem }()
 			defer wg.Done()
 			defer bar.Add(1)
 
@@ -113,8 +117,10 @@ func (ps *Photos) Read(bucketURL string, dir string) error {
 			ps.Append(p)
 		}(key)
 	}
-
-	wg.Wait()
+	for i := 0; i < cap(sem); i++ {
+		sem <- true
+	}
+	// wg.Wait()
 
 	for i, j := 0, ps.Len()-1; i < j; i, j = i+1, j-1 {
 		*ps.Get(i), *ps.Get(j) = *ps.Get(j), *ps.Get(i)
