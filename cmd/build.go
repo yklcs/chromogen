@@ -5,8 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"io/fs"
+	"net/url"
 	"os"
 	"path"
+	"path/filepath"
+	"strings"
 
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
@@ -17,17 +20,18 @@ import (
 
 func Build(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
-	var inUrl = flags.String("i", ".", "input")
 	var outDir = flags.String("o", "dist", "output directory")
 	var confPath = flags.String("c", "panchro.json", "configuration json file path")
-	var concurrency = flags.Int("concurrency", 128, "configuration json file path")
+	var concurrency = flags.Int("concurrency", 128, "concurrency limit, edit depending on memory usage")
 
 	// var compressImages = flags.Bool("compress", true, "enable image compression")
 
 	flags.Usage = func() {
-		fmt.Fprintln(flags.Output(), "Usage: panchro build")
+		fmt.Fprintln(flags.Output(), "Usage: panchro build [...flags] <input url>")
 		fmt.Fprintln(flags.Output(), "Flags:")
 		flags.PrintDefaults()
+		fmt.Fprintln(flags.Output(), "Example: panchro build -o=output -c=config.json images")
+		fmt.Fprintln(flags.Output())
 	}
 
 	err := flags.Parse(args)
@@ -35,14 +39,28 @@ func Build(args []string) error {
 		return err
 	}
 
-	if len(flags.Args()) > 0 {
+	if len(flags.Args()) != 1 {
 		flags.Usage()
-		return errors.New("unknown arguments")
+		return errors.New("wrong number of arguments")
+	}
+
+	inUrl := flags.Args()[0]
+	if !strings.HasPrefix(inUrl, "s3://") && !strings.HasPrefix(inUrl, "s3://") {
+		absInUrl, err := filepath.Abs(inUrl)
+		if err != nil {
+			return err
+		}
+
+		inUrlUrl := url.URL{
+			Scheme: "file",
+			Path:   absInUrl,
+		}
+		inUrl = inUrlUrl.String()
 	}
 
 	conf, err := config.ReadConfig(*confPath)
 	if err != nil {
-		return err
+		return errors.New(err.Error() + "\nspecify config file location with the -c flag")
 	}
 
 	ps := photos.NewPhotos(*outDir)
@@ -57,13 +75,13 @@ func Build(args []string) error {
 		return err
 	}
 
-	err = ps.Read(*inUrl, ps.Dir, *concurrency)
+	err = ps.Read(inUrl, ps.Dir, *concurrency)
 	if err != nil {
 		return err
 	}
 
 	if ps.Len() == 0 {
-		return errors.New("no images found in " + *inUrl)
+		return errors.New("no images found in " + ps.BucketURL)
 	}
 
 	indexHTML, err := os.Create(path.Join(*outDir, "index.html"))

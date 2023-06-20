@@ -60,7 +60,7 @@ func NewPhoto(imgPath string, dir string, r io.Reader) (Photo, error) {
 	case ".webp":
 		format = Webp
 	default:
-		return Photo{}, errors.New("invalid format")
+		return Photo{}, errors.New("invalid format: " + ext)
 	}
 
 	buf, err := io.ReadAll(r)

@@ -70,7 +70,10 @@ func downloadPhoto(fpath string, r io.Reader) error {
 
 func (ps *Photos) Read(bucketURL string, dir string, concurrency int) error {
 	ctx := context.Background()
-	bucket, err := blob.OpenBucket(ctx, bucketURL)
+
+	ps.BucketURL = bucketURL
+
+	bucket, err := blob.OpenBucket(ctx, ps.BucketURL)
 	if err != nil {
 		return err
 	}

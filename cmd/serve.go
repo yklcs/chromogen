@@ -5,6 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
+	"path/filepath"
+	"strings"
 
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
@@ -14,16 +17,17 @@ import (
 
 func Serve(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
-	var inUrl = flags.String("i", ".", "input")
 	var outDir = flags.String("o", "dist", "output directory")
 	var confPath = flags.String("c", "panchro.json", "configuration json file path")
 	var concurrency = flags.Int("concurrency", 128, "configuration json file path")
 	// var compressImages = flags.Bool("compress", true, "enable image compression")
 
 	flags.Usage = func() {
-		fmt.Fprintln(flags.Output(), "Usage: panchro build")
+		fmt.Fprintln(flags.Output(), "Usage: panchro serve [...flags] <input url>")
 		fmt.Fprintln(flags.Output(), "Flags:")
 		flags.PrintDefaults()
+		fmt.Fprintln(flags.Output(), "Example: panchro serve  -o=output -c=config.json images")
+		fmt.Fprintln(flags.Output())
 	}
 
 	err := flags.Parse(args)
@@ -31,9 +35,23 @@ func Serve(args []string) error {
 		return err
 	}
 
-	if len(flags.Args()) > 0 {
+	if len(flags.Args()) != 1 {
 		flags.Usage()
-		return errors.New("unknown arguments")
+		return errors.New("wrong number of arguments")
+	}
+
+	inUrl := flags.Args()[0]
+	if !strings.HasPrefix(inUrl, "s3://") && !strings.HasPrefix(inUrl, "s3://") {
+		absInUrl, err := filepath.Abs(inUrl)
+		if err != nil {
+			return err
+		}
+
+		inUrlUrl := url.URL{
+			Scheme: "file",
+			Path:   absInUrl,
+		}
+		inUrl = inUrlUrl.String()
 	}
 
 	conf, err := config.ReadConfig(*confPath)
@@ -43,18 +61,13 @@ func Serve(args []string) error {
 
 	ps := photos.Photos{}
 
-	err = ps.Read(*inUrl, *outDir, *concurrency)
+	err = ps.Read(inUrl, *outDir, *concurrency)
 	if err != nil {
 		return err
 	}
 
-	// Reverse imgs
-	// for i, j := 0, len(imgs)-1; i < j; i, j = i+1, j-1 {
-	// 	imgs[i], imgs[j] = imgs[j], imgs[i]
-	// }
-
 	if ps.Len() == 0 {
-		return errors.New("no images found in " + *inUrl)
+		return errors.New("no images found in " + ps.BucketURL)
 	}
 
 	srv, _ := server.NewServer(ps, conf)

@@ -6,7 +6,7 @@ type Photos struct {
 	photos       []Photo
 	OriginalsDir string
 	Dir          string
-	bucketURL    string
+	BucketURL    string
 }
 
 func NewPhotos(dir string) Photos {

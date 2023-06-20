@@ -11,8 +11,9 @@ import (
 func usage() {
 	fmt.Print(`panchro [command]
 Usage:
-  panchro build		build panchro site
+	panchro build		build panchro site
 	panchro serve		serve panchro site
+
 `)
 }
 
