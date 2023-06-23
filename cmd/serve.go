@@ -41,7 +41,7 @@ func Serve(args []string) error {
 	}
 
 	inUrl := flags.Args()[0]
-	if !strings.HasPrefix(inUrl, "s3://") && !strings.HasPrefix(inUrl, "s3://") {
+	if !strings.HasPrefix(inUrl, "s3://") && !strings.HasPrefix(inUrl, "file://") {
 		absInUrl, err := filepath.Abs(inUrl)
 		if err != nil {
 			return err

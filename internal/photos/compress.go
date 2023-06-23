@@ -37,9 +37,9 @@ func compressPhoto(p *Photo, src string, dst string, longSideSize int, quality i
 	p.Height = h
 }
 
-func (ps *Photos) Process() error {
+func (ps *Photos) Compress() error {
 	num_images := ps.Len()
-	bar := progressbar.Default(int64(num_images), "download")
+	bar := progressbar.Default(int64(num_images), "compress")
 
 	var wg sync.WaitGroup
 	wg.Add(ps.Len())
@@ -49,8 +49,9 @@ func (ps *Photos) Process() error {
 			defer bar.Add(1)
 			compressPhoto(ps.Get(i), p.OriginalFilePath, p.FilePath, 2048, 80)
 		}(i, p)
-		wg.Wait()
 	}
+
+	wg.Wait()
 
 	return nil
 }

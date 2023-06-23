@@ -23,8 +23,7 @@ func Build(args []string) error {
 	var outDir = flags.String("o", "dist", "output directory")
 	var confPath = flags.String("c", "panchro.json", "configuration json file path")
 	var concurrency = flags.Int("concurrency", 128, "concurrency limit, edit depending on memory usage")
-
-	// var compressImages = flags.Bool("compress", true, "enable image compression")
+	var compress = flags.Bool("compress", true, "enable image compression")
 
 	flags.Usage = func() {
 		fmt.Fprintln(flags.Output(), "Usage: panchro build [...flags] <input url>")
@@ -45,7 +44,7 @@ func Build(args []string) error {
 	}
 
 	inUrl := flags.Args()[0]
-	if !strings.HasPrefix(inUrl, "s3://") && !strings.HasPrefix(inUrl, "s3://") {
+	if !strings.HasPrefix(inUrl, "s3://") && !strings.HasPrefix(inUrl, "file://") {
 		absInUrl, err := filepath.Abs(inUrl)
 		if err != nil {
 			return err
@@ -82,6 +81,13 @@ func Build(args []string) error {
 
 	if ps.Len() == 0 {
 		return errors.New("no images found in " + ps.BucketURL)
+	}
+
+	if *compress {
+		err = ps.Compress()
+		if err != nil {
+			return err
+		}
 	}
 
 	indexHTML, err := os.Create(path.Join(*outDir, "index.html"))
