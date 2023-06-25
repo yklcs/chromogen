@@ -33,15 +33,15 @@
       <div class="image-layout">
         <div class="image-sidebar">
           <div class="image-meta">
-            <span>{{ .Photo.MakeModel }}</span>
+            <span>{{ .Photo.Exif.MakeModel }}</span>
             <div class="exposure-settings">
-              <span>{{ .Photo.FNumber }}</span>
-              <span>{{ .Photo.ShutterSpeed }}</span>
-              <span>{{ .Photo.ISO }}</span>
+              <span>{{ .Photo.Exif.FNumber }}</span>
+              <span>{{ .Photo.Exif.ShutterSpeed }}</span>
+              <span>{{ .Photo.Exif.ISO }}</span>
             </div>
-            {{ if not .Photo.DateTime.IsZero }}
-              <time datetime="{{ .Photo.DateTime }}"
-                >{{ .Photo.DateTime.Format "Jan 2, 2006" }}</time
+            {{ if not .Photo.Exif.DateTime.IsZero }}
+              <time datetime="{{ .Photo.Exif.DateTime }}"
+                >{{ .Photo.Exif.DateTime.Format "Jan 2, 2006" }}</time
               >
             {{ end }}
           </div>

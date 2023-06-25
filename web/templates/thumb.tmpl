@@ -36,9 +36,9 @@
         {{ template "thumb_img" . }}
       </div>
       <figcaption>
-        {{ if not .DateTime.IsZero }}
-          <time datetime="{{ .DateTime }}"
-            >{{ .DateTime.Format "Jan 2, 2006" }}</time
+        {{ if not .Exif.DateTime.IsZero }}
+          <time datetime="{{ .Exif.DateTime }}"
+            >{{ .Exif.DateTime.Format "Jan 2, 2006" }}</time
           >
         {{ else }}
           <br />

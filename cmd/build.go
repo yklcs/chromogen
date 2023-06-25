@@ -1,28 +1,28 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
 	"io/fs"
-	"net/url"
 	"os"
 	"path"
-	"path/filepath"
-	"strings"
 
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/render"
+	"github.com/yklcs/panchro/internal/utils"
 	"github.com/yklcs/panchro/web"
+	"gocloud.dev/blob"
 	_ "gocloud.dev/blob/fileblob"
 )
 
 func Build(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
-	var outDir = flags.String("o", "dist", "output directory")
+	var outUrlPtr = flags.String("o", "dist", "output directory")
 	var confPath = flags.String("c", "panchro.json", "configuration json file path")
-	var concurrency = flags.Int("concurrency", 128, "concurrency limit, edit depending on memory usage")
+	// var concurrency = flags.Int("concurrency", 128, "concurrency limit, edit depending on memory usage")
 	var compress = flags.Bool("compress", true, "enable image compression")
 
 	flags.Usage = func() {
@@ -44,43 +44,40 @@ func Build(args []string) error {
 	}
 
 	inUrl := flags.Args()[0]
-	if !strings.HasPrefix(inUrl, "s3://") && !strings.HasPrefix(inUrl, "file://") {
-		absInUrl, err := filepath.Abs(inUrl)
-		if err != nil {
-			return err
-		}
+	inUrl, _ = utils.CanonicalizeURL(inUrl)
+	outUrl, _ := utils.CanonicalizeURL(*outUrlPtr)
 
-		inUrlUrl := url.URL{
-			Scheme: "file",
-			Path:   absInUrl,
-		}
-		inUrl = inUrlUrl.String()
+	inBucket, err := blob.OpenBucket(context.Background(), inUrl)
+	if err != nil {
+		return err
 	}
+	defer inBucket.Close()
+
+	outBucket, err := blob.OpenBucket(context.Background(), outUrl+"?metadata=skip")
+	if err != nil {
+		return err
+	}
+	defer outBucket.Close()
 
 	conf, err := config.ReadConfig(*confPath)
 	if err != nil {
 		return errors.New(err.Error() + "\nspecify config file location with the -c flag")
 	}
 
-	ps := photos.NewPhotos(*outDir)
-
-	err = os.RemoveAll(ps.Dir)
-	if err != nil {
-		return err
-	}
+	ps := photos.NewPhotos("/", outBucket)
 
 	err = os.MkdirAll(ps.Dir, 0755)
 	if err != nil {
 		return err
 	}
 
-	err = ps.Read(inUrl, ps.Dir, *concurrency)
+	err = ps.Read(inBucket)
 	if err != nil {
 		return err
 	}
 
 	if ps.Len() == 0 {
-		return errors.New("no images found in " + ps.BucketURL)
+		return errors.New("no images found in " + inUrl)
 	}
 
 	if *compress {
@@ -90,10 +87,11 @@ func Build(args []string) error {
 		}
 	}
 
-	indexHTML, err := os.Create(path.Join(*outDir, "index.html"))
+	indexHTML, err := outBucket.NewWriter(context.Background(), "index.html", nil)
 	if err != nil {
 		return err
 	}
+	defer indexHTML.Close()
 
 	err = render.RenderIndex(indexHTML, ps, conf)
 	if err != nil {
@@ -101,22 +99,28 @@ func Build(args []string) error {
 	}
 
 	static, _ := fs.Sub(web.Content, "static")
-	err = render.CopyFS(static, *outDir)
+	err = render.WriteFS(static, outBucket)
 	if err != nil {
 		return err
 	}
 
 	for i := 0; i < ps.Len(); i++ {
-		dir := path.Join(*outDir, ps.Get(i).ID)
-		err := os.MkdirAll(dir, 0755)
+		dir := path.Join("", ps.Get(i).ID)
+		// err := os.MkdirAll(dir, 0755)
 		if err != nil {
 			return err
 		}
 
-		imageHTML, err := os.Create(path.Join(dir, "index.html"))
+		// imageHTML, err := os.Create(path.Join(dir, "index.html"))
+		// if err != nil {
+		// return err
+		// }
+
+		imageHTML, err := outBucket.NewWriter(context.Background(), path.Join(dir, "index.html"), nil)
 		if err != nil {
 			return err
 		}
+		defer imageHTML.Close()
 
 		err = render.RenderPhoto(imageHTML, *ps.Get(i), conf)
 		if err != nil {

@@ -23,5 +23,10 @@ func NewServer(ps photos.Photos, conf *config.Config) (*Server, error) {
 		Conf:   conf,
 	})
 
+	srv.Mux.Handle("/api/", handlers.APIHandler{
+		Photos: ps,
+		Conf:   conf,
+	})
+
 	return srv, nil
 }

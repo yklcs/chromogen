@@ -47,7 +47,12 @@ func (ps *Photos) Compress() error {
 		go func(i int, p Photo) {
 			defer wg.Done()
 			defer bar.Add(1)
-			compressPhoto(ps.Get(i), p.OriginalFilePath, p.FilePath, 2048, 80)
+
+			compressPhoto(ps.Get(i), "", "", 2048, 80)
+			ps.manifest.Run(func(m *Manifest) error {
+				m.Compressed = append(m.Compressed, p.ID)
+				return nil
+			})
 		}(i, p)
 	}
 

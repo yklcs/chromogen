@@ -25,13 +25,8 @@ func generatePlaceholderURI(r io.Reader) string {
 	return "data:image/jpeg;base64," + enc
 }
 
-func (ps *Photos) Upload(bucketURL string, key string, p Photo) error {
+func (ps *Photos) Upload(bucket *blob.Bucket, key string, p Photo) error {
 	ctx := context.Background()
-	bucket, err := blob.OpenBucket(ctx, bucketURL)
-	if err != nil {
-		return err
-	}
-	defer bucket.Close()
 
 	w, err := bucket.NewWriter(ctx, "e", &blob.WriterOptions{})
 	if err != nil {
@@ -68,16 +63,8 @@ func downloadPhoto(fpath string, r io.Reader) error {
 	return nil
 }
 
-func (ps *Photos) Read(bucketURL string, dir string, concurrency int) error {
+func ListBucket(bucket *blob.Bucket) ([]string, error) {
 	ctx := context.Background()
-
-	ps.BucketURL = bucketURL
-
-	bucket, err := blob.OpenBucket(ctx, ps.BucketURL)
-	if err != nil {
-		return err
-	}
-	defer bucket.Close()
 
 	var keys []string
 	iter := bucket.List(nil)
@@ -87,22 +74,34 @@ func (ps *Photos) Read(bucketURL string, dir string, concurrency int) error {
 			break
 		}
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		keys = append(keys, obj.Key)
+	}
+
+	return keys, nil
+}
+
+func (ps *Photos) Write(bucket *blob.Bucket) error {
+	return nil
+}
+
+// Read photos, writing metadata into memory
+func (ps *Photos) Read(bucket *blob.Bucket) error {
+	ctx := context.Background()
+
+	keys, err := ListBucket(bucket)
+	if err != nil {
+		return err
 	}
 
 	bar := progressbar.Default(int64(len(keys)), "download")
 	var wg sync.WaitGroup
 	wg.Add(len(keys))
 
-	sem := make(chan bool, concurrency)
-
 	for _, key := range keys {
-		sem <- true
 		go func(key string) {
-			defer func() { <-sem }()
 			defer wg.Done()
 			defer bar.Add(1)
 
@@ -112,23 +111,21 @@ func (ps *Photos) Read(bucketURL string, dir string, concurrency int) error {
 			}
 			defer r.Close()
 
-			p, err := NewPhoto(key, dir, r)
+			p, err := NewPhoto(key, ps.Bucket)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
-			ps.Append(p)
+			_, err = p.ReadFrom(r)
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			ps.Add(p)
 		}(key)
 	}
-	for i := 0; i < cap(sem); i++ {
-		sem <- true
-	}
-	// wg.Wait()
 
-	for i, j := 0, ps.Len()-1; i < j; i, j = i+1, j-1 {
-		*ps.Get(i), *ps.Get(j) = *ps.Get(j), *ps.Get(i)
-	}
-
+	wg.Wait()
 	return nil
 }
 

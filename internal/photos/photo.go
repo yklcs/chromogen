@@ -2,54 +2,64 @@ package photos
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"errors"
 	"fmt"
 	"html/template"
 	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
+	"log"
 	"math"
 	"path"
 	"strings"
 	"time"
 
 	"github.com/rwcarlsen/goexif/exif"
+	"github.com/yklcs/panchro/internal/utils"
+	"gocloud.dev/blob"
 )
 
-type Format int
+type Format string
 
 const (
-	Png Format = iota
-	Jpeg
-	Webp
+	Png  Format = ".png"
+	Jpeg        = ".jpg"
+	Webp        = ".webp"
 )
 
 type Photo struct {
 	ID string
 
-	Path             string
-	SourcePath       string
-	FilePath         string
-	OriginalFilePath string
+	Path       string
+	SourcePath string
 
-	Format   Format
-	DateTime time.Time
-	Hash     []byte
+	Format Format
+	Hash   []byte
 
-	MakeModel    string
-	ShutterSpeed string
-	FNumber      string
-	ISO          string
+	Exif *Exif
 
 	PlaceholderURI template.URL
 	Width          int
 	Height         int
+
+	bucket *blob.Bucket
 }
 
-func NewPhoto(imgPath string, dir string, r io.Reader) (Photo, error) {
+type Exif struct {
+	DateTime     time.Time
+	MakeModel    string
+	ShutterSpeed string
+	FNumber      string
+	ISO          string
+}
+
+func NewPhoto(filepath string, bucket *blob.Bucket) (Photo, error) {
 	var format Format
 
-	ext := strings.ToLower(path.Ext(imgPath))
+	ext := strings.ToLower(path.Ext(filepath))
 	switch ext {
 	case ".png":
 		format = Png
@@ -63,67 +73,103 @@ func NewPhoto(imgPath string, dir string, r io.Reader) (Photo, error) {
 		return Photo{}, errors.New("invalid format: " + ext)
 	}
 
-	buf, err := io.ReadAll(r)
-	if err != nil {
-		return Photo{}, err
-	}
-
-	hash := sha256.New()
-	_, err = hash.Write(buf)
-	if err != nil {
-		return Photo{}, err
-	}
-
-	x, err := exif.Decode(bytes.NewReader(buf))
-	if err != nil {
-		return Photo{}, err
-	}
-
-	img, _, err := image.Decode(bytes.NewReader(buf))
-	if err != nil {
-		return Photo{}, err
-	}
-
-	hashstr := base58Encode(hash.Sum(nil))
-	id := hashstr[:8]
-
-	fpath := id + ext
-
-	p := ProcessExif(Photo{
-		ID:               id,
-		Format:           format,
-		Path:             fpath,
-		FilePath:         path.Join(dir, fpath),
-		OriginalFilePath: path.Join(dir, "o", fpath),
-		SourcePath:       imgPath,
-		Hash:             hash.Sum(nil),
-		Width:            img.Bounds().Dx(),
-		Height:           img.Bounds().Dy(),
-		PlaceholderURI:   template.URL(generatePlaceholderURI(bytes.NewReader(buf))),
-	}, x)
-
-	err = downloadPhoto(p.FilePath, bytes.NewReader(buf))
-	if err != nil {
-		return Photo{}, err
-	}
-
-	err = downloadPhoto(p.OriginalFilePath, bytes.NewReader(buf))
-	return p, err
+	return Photo{
+		Format:     format,
+		SourcePath: filepath,
+		bucket:     bucket,
+	}, nil
 }
 
-func ProcessExif(img Photo, x *exif.Exif) Photo {
+func (p *Photo) Read(b []byte) (int, error) {
+	r, err := p.bucket.NewReader(context.Background(), p.Path, nil)
+	if err != nil {
+		return len(b), err
+	}
+	defer r.Close()
+
+	n, err := r.Read(b)
+	return n, err
+}
+
+func (p *Photo) ReadFrom(r io.Reader) (int, error) {
+	buf := bytes.Buffer{}
+	buf.ReadFrom(r)
+
+	if len(p.Hash) == 0 {
+		hash := sha256.New()
+
+		hashN, err := hash.Write(buf.Bytes())
+		if err != nil {
+			return hashN, err
+		}
+		p.Hash = hash.Sum(nil)
+		p.ID = utils.Base58Encode(p.Hash)[:8]
+		p.Path = p.ID + string(p.Format)
+	}
+
+	if p.Exif == nil {
+		x, err := exif.Decode(bytes.NewReader(buf.Bytes()))
+		if err != nil {
+			return buf.Len(), err
+		}
+		p.Exif = ProcessExif(x)
+	}
+
+	img, _, err := image.DecodeConfig(bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		return buf.Len(), err
+	}
+	p.Width = img.Width
+	p.Height = img.Height
+
+	if p.PlaceholderURI == "" {
+		placeholder := generatePlaceholderURI(bytes.NewReader(buf.Bytes()))
+		p.PlaceholderURI = template.URL(placeholder)
+	}
+
+	w, err := p.bucket.NewWriter(context.Background(), p.Path, nil)
+	if err != nil {
+		return buf.Len(), err
+	}
+	defer w.Close()
+
+	io.Copy(w, bytes.NewReader(buf.Bytes()))
+	// _, err = w.Write(b)
+	if err != nil {
+		return buf.Len(), err
+	}
+
+	return buf.Len(), nil
+}
+
+func (p *Photo) Compress(longSideSize int, quality int) {
+	pr, pw := io.Pipe()
+	p.ReadFrom(pr)
+	w, h, err := ResizeAndCompress(p, pw, longSideSize, quality)
+
+	p.Width = w
+	p.Height = h
+
+	if err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func ProcessExif(x *exif.Exif) *Exif {
+	ex := Exif{}
+
 	mkTag, _ := x.Get(exif.Make)
 	if mkTag != nil {
-		img.MakeModel, _ = mkTag.StringVal()
+		ex.MakeModel, _ = mkTag.StringVal()
 	}
 
 	modelTag, _ := x.Get(exif.Model)
 	if modelTag != nil {
 		model, _ := modelTag.StringVal()
-		img.MakeModel += " " + model
+		ex.MakeModel += " " + model
 	}
 
-	img.DateTime, _ = x.DateTime()
+	ex.DateTime, _ = x.DateTime()
 
 	ssTag, _ := x.Get(exif.ShutterSpeedValue)
 	if ssTag != nil {
@@ -132,74 +178,29 @@ func ProcessExif(img Photo, x *exif.Exif) Photo {
 		ss := math.Pow(2, -ssApex)
 
 		if ss > 1 {
-			img.ShutterSpeed = fmt.Sprintf("%.1fs", ss)
+			ex.ShutterSpeed = fmt.Sprintf("%.1fs", ss)
 		} else {
-			img.ShutterSpeed = fmt.Sprintf("1/%ds", int(math.Round(1/ss)))
+			ex.ShutterSpeed = fmt.Sprintf("1/%ds", int(math.Round(1/ss)))
 		}
 	}
 
 	fTag, _ := x.Get(exif.FNumber)
 	if fTag != nil {
 		fRat, _ := fTag.Rat(0)
-		img.FNumber = "ƒ/"
+		ex.FNumber = "ƒ/"
 		if fRat.IsInt() {
-			img.FNumber += fRat.RatString()
+			ex.FNumber += fRat.RatString()
 		} else {
 			f, _ := fRat.Float64()
-			img.FNumber += fmt.Sprintf("%.1f", f)
+			ex.FNumber += fmt.Sprintf("%.1f", f)
 		}
 	}
 
 	isoTag, _ := x.Get(exif.ISOSpeedRatings)
 	if isoTag != nil {
 		iso, _ := isoTag.Int64(0)
-		img.ISO = "ISO " + fmt.Sprint(iso)
+		ex.ISO = "ISO " + fmt.Sprint(iso)
 	}
 
-	return img
-}
-
-func base58Encode(src []byte) string {
-	alphabet := []rune("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
-
-	bytes := make([]byte, 0)
-
-	leadingZeros := 0
-	for _, b := range src {
-		if b == 0 {
-			leadingZeros++
-		} else {
-			break
-		}
-	}
-
-	for _, b := range src {
-		carry := int(b)
-		for j := 0; carry != 0 || j < len(bytes); j++ {
-			if j == len(bytes) {
-				carry += 0
-			} else {
-				carry += int(bytes[j]) << 8
-			}
-
-			if j == len(bytes) {
-				bytes = append(bytes, byte(carry%58))
-			} else {
-				bytes[j] = byte(carry % 58)
-			}
-
-			carry /= 58
-		}
-	}
-
-	str := ""
-	for i := 0; i < leadingZeros+len(bytes); i++ {
-		if i < leadingZeros {
-			str += string(alphabet[0])
-		} else {
-			str += string(alphabet[int(bytes[len(bytes)+leadingZeros-i-1])])
-		}
-	}
-
-	return str
+	return &ex
 }
