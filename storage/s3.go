@@ -16,19 +16,23 @@ type S3Storage struct {
 	url    string
 }
 
-func (s *S3Storage) Upload(r io.Reader, fpath string) string {
-	out, err := s.client.PutObject(
+func (s *S3Storage) Upload(r io.Reader, fpath string) (string, error) {
+	_, err := s.client.PutObject(
 		context.TODO(),
 		&s3.PutObjectInput{
 			Bucket: aws.String(s.bucket),
-			Key:    aws.String(path),
+			Key:    aws.String(fpath),
 			Body:   r,
 		},
 	)
 
-	return path.Join(url, path)
+	return path.Join(s.url, fpath), err
 }
 
 func (s *S3Storage) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
+}
+
+func (s S3Storage) Backend() string {
+	return "s3"
 }

@@ -2,8 +2,8 @@ package photos
 
 import (
 	"bytes"
-	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"html/template"
@@ -19,7 +19,7 @@ import (
 
 	"github.com/rwcarlsen/goexif/exif"
 	"github.com/yklcs/panchro/internal/utils"
-	"gocloud.dev/blob"
+	"github.com/yklcs/panchro/storage"
 )
 
 type Format string
@@ -31,7 +31,8 @@ const (
 )
 
 type Photo struct {
-	ID string
+	ID  string
+	URL string
 
 	Path       string
 	SourcePath string
@@ -44,8 +45,6 @@ type Photo struct {
 	PlaceholderURI template.URL
 	Width          int
 	Height         int
-
-	bucket *blob.Bucket
 }
 
 type Exif struct {
@@ -56,7 +55,7 @@ type Exif struct {
 	ISO          string
 }
 
-func NewPhoto(filepath string, bucket *blob.Bucket) (Photo, error) {
+func NewPhoto(filepath string) (Photo, error) {
 	var format Format
 
 	ext := strings.ToLower(path.Ext(filepath))
@@ -76,31 +75,22 @@ func NewPhoto(filepath string, bucket *blob.Bucket) (Photo, error) {
 	return Photo{
 		Format:     format,
 		SourcePath: filepath,
-		bucket:     bucket,
 	}, nil
 }
 
-func (p *Photo) Read(b []byte) (int, error) {
-	r, err := p.bucket.NewReader(context.Background(), p.Path, nil)
-	if err != nil {
-		return len(b), err
-	}
-	defer r.Close()
-
-	n, err := r.Read(b)
-	return n, err
-}
-
-func (p *Photo) ReadFrom(r io.Reader) (int, error) {
-	buf := bytes.Buffer{}
-	buf.ReadFrom(r)
+func (p *Photo) ProcessMeta(r io.Reader) error {
+	hashReader, hashWriter := io.Pipe()
+	exifReader, exifWriter := io.Pipe()
+	imageReader, imageWriter := io.Pipe()
+	placeholderReader, placeholderWriter := io.Pipe()
+	w := io.MultiWriter(hashWriter, exifWriter, imageWriter, placeholderWriter)
 
 	if len(p.Hash) == 0 {
 		hash := sha256.New()
 
-		hashN, err := hash.Write(buf.Bytes())
+		_, err := io.Copy(hash, hashReader)
 		if err != nil {
-			return hashN, err
+			return err
 		}
 		p.Hash = hash.Sum(nil)
 		p.ID = utils.Base58Encode(p.Hash)[:8]
@@ -108,38 +98,33 @@ func (p *Photo) ReadFrom(r io.Reader) (int, error) {
 	}
 
 	if p.Exif == nil {
-		x, err := exif.Decode(bytes.NewReader(buf.Bytes()))
+		x, err := exif.Decode(exifReader)
 		if err != nil {
-			return buf.Len(), err
+			return err
 		}
 		p.Exif = ProcessExif(x)
 	}
 
-	img, _, err := image.DecodeConfig(bytes.NewReader(buf.Bytes()))
+	img, _, err := image.DecodeConfig(imageReader)
 	if err != nil {
-		return buf.Len(), err
+		return err
 	}
 	p.Width = img.Width
 	p.Height = img.Height
 
 	if p.PlaceholderURI == "" {
-		placeholder := generatePlaceholderURI(bytes.NewReader(buf.Bytes()))
+		placeholder := generatePlaceholderURI(placeholderReader)
 		p.PlaceholderURI = template.URL(placeholder)
 	}
 
-	w, err := p.bucket.NewWriter(context.Background(), p.Path, nil)
-	if err != nil {
-		return buf.Len(), err
-	}
-	defer w.Close()
+	_, err = io.Copy(w, r)
+	return err
+}
 
-	io.Copy(w, bytes.NewReader(buf.Bytes()))
-	// _, err = w.Write(b)
-	if err != nil {
-		return buf.Len(), err
-	}
-
-	return buf.Len(), nil
+func (p *Photo) Upload(r io.Reader, store storage.Storage) error {
+	purl, err := store.Upload(r, p.Path)
+	p.URL = purl
+	return err
 }
 
 func (p *Photo) Compress(longSideSize int, quality int) {
@@ -203,4 +188,12 @@ func ProcessExif(x *exif.Exif) *Exif {
 	}
 
 	return &ex
+}
+
+func generatePlaceholderURI(r io.Reader) string {
+	var b bytes.Buffer
+	ResizeAndCompress(r, &b, 12, 75)
+
+	enc := base64.StdEncoding.EncodeToString(b.Bytes())
+	return "data:image/jpeg;base64," + enc
 }

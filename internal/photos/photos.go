@@ -1,26 +1,19 @@
 package photos
 
 import (
-	"path"
-
-	"gocloud.dev/blob"
+	"github.com/yklcs/panchro/storage"
 	"golang.org/x/exp/slices"
 )
 
 type Photos struct {
-	photos       []Photo
-	OriginalsDir string
-	Dir          string
-	manifest     *Manifest
-	Bucket       *blob.Bucket
+	photos   []Photo
+	manifest *Manifest
+	store    storage.Storage
 }
 
-func NewPhotos(dir string, bucket *blob.Bucket) Photos {
+func NewPhotos() Photos {
 	p := Photos{
-		Dir:          dir,
-		OriginalsDir: path.Join(dir, "o"),
-		manifest:     NewManifest(path.Join(dir, "manifest.json")),
-		Bucket:       bucket,
+		manifest: NewManifest("manifest.json"),
 	}
 
 	return p

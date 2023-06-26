@@ -14,9 +14,6 @@ Why would anyone need this?
 # build static site (input from ./images, output to ./dist)
 $ panchro build images
 
-# build static site (input from s3://input, output to s3://output)
-$ panchro build -o s3://output s3://input
-
 # serve cms (save photos to ./dist)
 $ panchro serve
 

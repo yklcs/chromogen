@@ -1,10 +1,46 @@
 package storage
 
-import "net/http"
+import (
+	"io"
+	"net/http"
+	"os"
+	"path"
+)
 
 type LocalStorage struct {
+	dir string
+}
+
+func NewLocalStorage(dir string) (*LocalStorage, error) {
+	err := os.MkdirAll(dir, 0755)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LocalStorage{dir: dir}, nil
+}
+
+func (s *LocalStorage) Upload(r io.Reader, fpath string) (string, error) {
+	fpath = path.Join(s.dir, fpath)
+	f, err := os.Create(fpath)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	_, err = f.ReadFrom(r)
+	if err != nil {
+		return "", err
+	}
+
+	return fpath, err
 }
 
 func (s *LocalStorage) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	filepath := path.Join(s.dir, r.URL.Path)
+	http.ServeFile(w, r, filepath)
+}
 
+func (s LocalStorage) Backend() string {
+	return "local"
 }

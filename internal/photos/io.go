@@ -1,128 +1,78 @@
 package photos
 
 import (
-	"bytes"
-	"context"
-	"encoding/base64"
 	"image"
 	"image/draw"
-	"io"
+	"io/fs"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"sync"
 
 	"github.com/schollz/progressbar/v3"
-	"gocloud.dev/blob"
+	"github.com/yklcs/panchro/storage"
 	_ "gocloud.dev/blob/s3blob"
+	"golang.org/x/exp/slices"
 )
 
-func generatePlaceholderURI(r io.Reader) string {
-	var b bytes.Buffer
-	ResizeAndCompress(r, &b, 12, 75)
-
-	enc := base64.StdEncoding.EncodeToString(b.Bytes())
-	return "data:image/jpeg;base64," + enc
-}
-
-func (ps *Photos) Upload(bucket *blob.Bucket, key string, p Photo) error {
-	ctx := context.Background()
-
-	w, err := bucket.NewWriter(ctx, "e", &blob.WriterOptions{})
-	if err != nil {
-		return err
-	}
-	defer w.Close()
-
-	file, err := os.ReadFile(p.SourcePath)
-	if err != nil {
-		return err
-	}
-
-	_, err = w.Write(file)
-	return err
-}
-
-func downloadPhoto(fpath string, r io.Reader) error {
-	err := os.MkdirAll(path.Dir(fpath), 0755)
-	if err != nil {
-		return err
-	}
-
-	f, err := os.Create(fpath)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	_, err = io.Copy(f, r)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func ListBucket(bucket *blob.Bucket) ([]string, error) {
-	ctx := context.Background()
-
-	var keys []string
-	iter := bucket.List(nil)
-	for {
-		obj, err := iter.Next(ctx)
-		if err == io.EOF {
-			break
+func MatchExts(dir string, exts []string) ([]string, error) {
+	var matched []string
+	err := filepath.WalkDir(dir, func(s string, d fs.DirEntry, e error) error {
+		if e != nil {
+			return e
 		}
-		if err != nil {
-			return nil, err
+		if d.IsDir() {
+			return nil
 		}
-
-		keys = append(keys, obj.Key)
-	}
-
-	return keys, nil
+		if slices.Contains(exts, filepath.Ext(d.Name())) {
+			matched = append(matched, s)
+		}
+		return nil
+	})
+	return matched, err
 }
 
-func (ps *Photos) Write(bucket *blob.Bucket) error {
-	return nil
-}
-
-// Read photos, writing metadata into memory
-func (ps *Photos) Read(bucket *blob.Bucket) error {
-	ctx := context.Background()
-
-	keys, err := ListBucket(bucket)
+// Read photo metadata into memory and photo data into FS
+func (ps *Photos) ReadFS(dir string) error {
+	ps.store, err = storage.NewLocalStorage("panchro")
 	if err != nil {
 		return err
 	}
 
-	bar := progressbar.Default(int64(len(keys)), "download")
+	fpaths, err := MatchExts(dir, []string{".jpeg", ".jpg"})
+	if err != nil {
+		return err
+	}
+
+	bar := progressbar.Default(int64(len(fpaths)), "download")
 	var wg sync.WaitGroup
-	wg.Add(len(keys))
+	wg.Add(len(fpaths))
 
-	for _, key := range keys {
-		go func(key string) {
+	for _, fpath := range fpaths {
+		go func(fpath string) {
 			defer wg.Done()
 			defer bar.Add(1)
 
-			r, err := bucket.NewReader(ctx, key, nil)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			defer r.Close()
-
-			p, err := NewPhoto(key, ps.Bucket)
+			p, err := NewPhoto(fpath)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
-			_, err = p.ReadFrom(r)
+			f, err := os.Open(fpath)
 			if err != nil {
 				log.Fatalln(err)
 			}
+			defer f.Close()
+
+			err = p.ProcessMeta(f)
+			if err != nil {
+				log.Fatalln(err)
+			}
+
+			p.Upload()
 
 			ps.Add(p)
-		}(key)
+		}(fpath)
 	}
 
 	wg.Wait()

@@ -6,7 +6,7 @@ import (
 )
 
 type Storage interface {
-	Upload(r io.Reader, path string) string
-	Url(path string)
+	Upload(r io.Reader, fpath string) (string, error)
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
+	Backend() string
 }
