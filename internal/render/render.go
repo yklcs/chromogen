@@ -7,16 +7,17 @@ import (
 	"path"
 
 	"github.com/yklcs/panchro/internal/config"
+	"github.com/yklcs/panchro/internal/photo"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/web"
 )
 
 type IndexedPhoto struct {
-	photos.Photo
+	photo.Photo
 	Index int
 }
 
-func IndexPhoto(img photos.Photo, index int) IndexedPhoto {
+func IndexPhoto(img photo.Photo, index int) IndexedPhoto {
 	return IndexedPhoto{
 		Photo: img,
 		Index: index,
@@ -54,9 +55,9 @@ func RenderIndex(w io.Writer, ps photos.Photos, conf *config.Config) error {
 	return nil
 }
 
-func RenderPhoto(w io.Writer, img photos.Photo, conf *config.Config) error {
+func RenderPhoto(w io.Writer, img photo.Photo, conf *config.Config) error {
 	type PhotoTemplateData struct {
-		Photo  photos.Photo
+		Photo  photo.Photo
 		Config config.Config
 	}
 

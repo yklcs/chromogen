@@ -1,8 +1,7 @@
 package photos
 
 import (
-	"image"
-	"image/draw"
+	"bytes"
 	"io/fs"
 	"log"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"sync"
 
 	"github.com/schollz/progressbar/v3"
+	"github.com/yklcs/panchro/internal/photo"
 	"github.com/yklcs/panchro/storage"
 	_ "gocloud.dev/blob/s3blob"
 	"golang.org/x/exp/slices"
@@ -32,71 +32,71 @@ func MatchExts(dir string, exts []string) ([]string, error) {
 	return matched, err
 }
 
-// Read photo metadata into memory and photo data into FS
-func (ps *Photos) ReadFS(dir string) error {
-	ps.store, err = storage.NewLocalStorage("panchro")
+// ProcessFS reads and processes photo data from the filesystem
+func (ps *Photos) ProcessFS(in, out string, longSideSize, quality int) error {
+	store, err := storage.NewLocalStorage(out)
+	ps.store = store
 	if err != nil {
 		return err
 	}
 
-	fpaths, err := MatchExts(dir, []string{".jpeg", ".jpg"})
+	fpaths, err := MatchExts(in, []string{".jpeg", ".jpg"})
 	if err != nil {
 		return err
 	}
 
-	bar := progressbar.Default(int64(len(fpaths)), "download")
+	bar := progressbar.Default(int64(len(fpaths)), "read")
+
 	var wg sync.WaitGroup
 	wg.Add(len(fpaths))
 
 	for _, fpath := range fpaths {
-		go func(fpath string) {
+		fin, err := os.Open(fpath)
+		if err != nil {
+			return err
+		}
+		defer fin.Close()
+		var buf bytes.Buffer
+		buf.ReadFrom(fin)
+
+		relpath, err := filepath.Rel(in, fpath)
+		if err != nil {
+			return err
+		}
+
+		p, err := photo.NewPhoto(relpath)
+		if err != nil {
+			return err
+		}
+
+		metaDone := make(chan bool, 1)
+		go func() {
+			err = p.ProcessMeta(bytes.NewReader(buf.Bytes()))
+			if err != nil {
+				log.Fatalln(err)
+			}
+			ps.Add(p)
+			metaDone <- true
+		}()
+
+		go func() {
 			defer wg.Done()
 			defer bar.Add(1)
 
-			p, err := NewPhoto(fpath)
+			var buf2 bytes.Buffer
+			w, h, err := photo.ResizeAndCompress(bytes.NewReader(buf.Bytes()), &buf2, longSideSize, quality)
 			if err != nil {
 				log.Fatalln(err)
 			}
 
-			f, err := os.Open(fpath)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			defer f.Close()
+			<-metaDone
+			p.Width = w
+			p.Height = h
 
-			err = p.ProcessMeta(f)
-			if err != nil {
-				log.Fatalln(err)
-			}
-
-			p.Upload()
-
-			ps.Add(p)
-		}(fpath)
+			p.Upload(bytes.NewReader(buf2.Bytes()), store)
+		}()
 	}
 
 	wg.Wait()
 	return nil
-}
-
-func imageToRGB(img image.Image) []byte {
-	bounds := img.Bounds()
-	width, height := bounds.Max.X, bounds.Max.Y
-
-	rgb := make([]byte, width*height*3)
-	rgba := image.NewRGBA(bounds)
-	draw.Draw(rgba, bounds, img, bounds.Min, draw.Src)
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			rgbaIndex := (y*width + x) * 4
-			rgbIndex := (y*width + x) * 3
-			pix := rgba.Pix[rgbaIndex : rgbaIndex+4]
-			rgb[rgbIndex] = pix[0]
-			rgb[1] = pix[1]
-			rgb[2] = pix[2]
-			copy(rgb[rgbIndex:rgbIndex+3], pix)
-		}
-	}
-
-	return rgb
 }
