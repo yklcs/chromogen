@@ -53,7 +53,7 @@ func Build(args []string) error {
 	}
 
 	ps := photos.NewPhotos()
-	err = ps.ProcessFS(in, *out, 2048, 75)
+	err = ps.ProcessFS(in, *out, *compress, 2048, 75)
 	if err != nil {
 		return err
 	}

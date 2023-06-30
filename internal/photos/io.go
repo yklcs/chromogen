@@ -33,7 +33,7 @@ func MatchExts(dir string, exts []string) ([]string, error) {
 }
 
 // ProcessFS reads and processes photo data from the filesystem
-func (ps *Photos) ProcessFS(in, out string, longSideSize, quality int) error {
+func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality int) error {
 	store, err := storage.NewLocalStorage(out)
 	ps.store = store
 	if err != nil {
@@ -83,13 +83,18 @@ func (ps *Photos) ProcessFS(in, out string, longSideSize, quality int) error {
 			defer wg.Done()
 			defer bar.Add(1)
 
+			w, h := p.Width, p.Height
 			var buf2 bytes.Buffer
-			w, h, err := photo.ResizeAndCompress(bytes.NewReader(buf.Bytes()), &buf2, longSideSize, quality)
-			if err != nil {
-				log.Fatalln(err)
+			if compress {
+				w, h, err = photo.ResizeAndCompress(bytes.NewReader(buf.Bytes()), &buf2, longSideSize, quality)
+				if err != nil {
+					log.Fatalln(err)
+				}
+			} else {
+				buf2 = buf
 			}
-
 			<-metaDone
+
 			p.Width = w
 			p.Height = h
 

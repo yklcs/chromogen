@@ -18,6 +18,9 @@ func processExif(x *exif.Exif) *Exif {
 		ex.MakeModel, _ = mkTag.StringVal()
 	}
 
+	oTag, _ := x.Get(exif.Orientation)
+	fmt.Println(oTag)
+
 	modelTag, _ := x.Get(exif.Model)
 	if modelTag != nil {
 		model, _ := modelTag.StringVal()
