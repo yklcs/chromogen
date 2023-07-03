@@ -1,0 +1,16 @@
+{{ define "panchro" }}
+  <!DOCTYPE html>
+  <html lang="en">
+    {{ template "head" . }}
+    <body>
+      <div class="backlogo">
+        <a href="{{ RootResolver `/` }}"> ↩ </a>
+      </div>
+      <form action="{{ RootResolver `/photos` }}" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" id="file">
+        <input type="password" name="token" id="token">
+        <button>Submit</button>
+      </form>
+    </body>
+  </html>
+{{ end }}

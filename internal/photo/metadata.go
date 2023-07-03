@@ -18,9 +18,6 @@ func processExif(x *exif.Exif) *Exif {
 		ex.MakeModel, _ = mkTag.StringVal()
 	}
 
-	oTag, _ := x.Get(exif.Orientation)
-	fmt.Println(oTag)
-
 	modelTag, _ := x.Get(exif.Model)
 	if modelTag != nil {
 		model, _ := modelTag.StringVal()
@@ -65,7 +62,7 @@ func processExif(x *exif.Exif) *Exif {
 
 func generatePlaceholderURI(r io.Reader) string {
 	var b bytes.Buffer
-	ResizeAndCompress(r, &b, 12, 75)
+	ResizeAndCompressStd(r, &b, 12, 75)
 
 	enc := base64.StdEncoding.EncodeToString(b.Bytes())
 	return "data:image/jpeg;base64," + enc

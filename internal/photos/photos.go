@@ -1,57 +1,138 @@
 package photos
 
 import (
+	"encoding/json"
+
+	"github.com/dgraph-io/badger/v3"
 	"github.com/yklcs/panchro/internal/photo"
-	"github.com/yklcs/panchro/storage"
 	"golang.org/x/exp/slices"
 )
 
 type Photos struct {
-	photos   []photo.Photo
-	manifest *Manifest
-	store    storage.Storage
+	db *badger.DB
 }
 
-func NewPhotos() Photos {
-	p := Photos{
-		manifest: NewManifest("manifest.json"),
-	}
-
-	return p
-}
-
-func (ps Photos) Slice() []photo.Photo {
-	return ps.photos
-}
-
-func (ps Photos) Len() int {
-	return len(ps.photos)
-}
-
-func (ps *Photos) Get(index int) *photo.Photo {
-	return &ps.photos[index]
-}
-
-func (ps *Photos) Add(p photo.Photo) {
-	ps.manifest.Run(func(m *Manifest) error {
-		m.Hashes[p.SourcePath] = p.ID
-		m.Read = append(ps.manifest.Read, p.ID)
+func NewPhotos(db *badger.DB) Photos {
+	db.Update(func(txn *badger.Txn) error {
+		mapb, err := json.Marshal([]string{})
+		if err != nil {
+			return err
+		}
+		txn.Set([]byte{0}, mapb)
 		return nil
 	})
-	pos, _ := slices.BinarySearchFunc(
-		ps.photos, p, func(p1, p2 photo.Photo) int {
-			return -p1.Exif.DateTime.Compare(p2.Exif.DateTime)
-		},
-	)
-	ps.photos = slices.Insert(ps.photos, pos, p)
+
+	return Photos{
+		db: db,
+	}
 }
 
-func (ps *Photos) Find(id string) *photo.Photo {
-	for _, p := range ps.photos {
-		if p.ID == id {
-			return &p
+func (ps Photos) Add(val photo.Photo) {
+	var ids []string
+	ps.db.Update(func(txn *badger.Txn) error {
+		valb, err := json.Marshal(val)
+		if err != nil {
+			return err
 		}
-	}
+		txn.Set([]byte(val.ID), valb)
 
-	return nil
+		idsitem, err := txn.Get([]byte{0})
+		if err != nil {
+			return err
+		}
+		err = idsitem.Value(func(val []byte) error {
+			err := json.Unmarshal(val, &ids)
+			return err
+		})
+		if err != nil {
+			return err
+		}
+
+		idsb, err := json.Marshal(append([]string{val.ID}, ids...))
+		if err != nil {
+			return err
+		}
+
+		err = txn.Set([]byte{0}, idsb)
+		return err
+	})
+}
+
+func (ps Photos) Set(val photo.Photo) {
+	ps.db.Update(func(txn *badger.Txn) error {
+		valb, err := json.Marshal(val)
+		if err != nil {
+			return err
+		}
+		err = txn.Set([]byte(val.ID), valb)
+		return err
+	})
+}
+
+func (ps Photos) IDs() []string {
+	ids := []string{}
+	ps.db.View(func(txn *badger.Txn) error {
+		idsitem, err := txn.Get([]byte{0})
+		if err != nil {
+			return err
+		}
+		err = idsitem.Value(func(val []byte) error {
+			err := json.Unmarshal(val, &ids)
+			return err
+		})
+		return err
+	})
+
+	return ids
+}
+
+func (ps Photos) Get(id string) (photo.Photo, error) {
+	var p photo.Photo
+	err := ps.db.Update(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(id))
+		if err != nil {
+			return err
+		}
+		err = item.Value(func(val []byte) error {
+			err := json.Unmarshal(val, &p)
+			return err
+		})
+		return err
+	})
+	return p, err
+}
+
+func (ps Photos) Delete(id string) (photo.Photo, error) {
+	var p photo.Photo
+	ids := []string{}
+	err := ps.db.Update(func(txn *badger.Txn) error {
+		err := txn.Delete([]byte(id))
+		if err != nil {
+			return err
+		}
+
+		idsitem, err := txn.Get([]byte{0})
+		if err != nil {
+			return err
+		}
+		err = idsitem.Value(func(val []byte) error {
+			err := json.Unmarshal(val, &ids)
+			return err
+		})
+		if err != nil {
+			return err
+		}
+
+		i := slices.Index(ids, id)
+		ids = slices.Delete(ids, i, i+1)
+
+		idsb, err := json.Marshal(ids)
+		if err != nil {
+			return err
+		}
+		err = txn.Set([]byte{0}, idsb)
+
+		return err
+	})
+	return p, err
 }

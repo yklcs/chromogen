@@ -6,8 +6,6 @@ import (
 	"errors"
 	"html/template"
 	"image"
-	_ "image/jpeg"
-	_ "image/png"
 	"io"
 	"log"
 	"path"
@@ -44,6 +42,8 @@ type Photo struct {
 	PlaceholderURI template.URL
 	Width          int
 	Height         int
+
+	buffer *bytes.Buffer
 }
 
 type Exif struct {
@@ -77,27 +77,25 @@ func NewPhoto(filepath string) (Photo, error) {
 	}, nil
 }
 
-func (p *Photo) ProcessMeta(r io.Reader) error {
-	var buf bytes.Buffer
-	buf.ReadFrom(r)
-
+func (p *Photo) ProcessMeta() error {
 	var wg sync.WaitGroup
 	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
-		r = bytes.NewReader(buf.Bytes())
+		r, _ := NewReader(*p)
 
 		hash := sha256.New()
-		hash.Write(buf.Bytes())
+		io.Copy(hash, r)
 		p.Hash = hash.Sum(nil)
-		p.ID = utils.Base58Encode(p.Hash)[:8]
+
+		p.ID = utils.Base58Encode(p.Hash)[:6]
 		p.Path = p.ID + string(p.Format)
 	}()
 
 	go func() {
 		defer wg.Done()
-		r = bytes.NewReader(buf.Bytes())
+		r, _ := NewReader(*p)
 
 		x, err := exif.Decode(r)
 		if err != nil {
@@ -108,7 +106,7 @@ func (p *Photo) ProcessMeta(r io.Reader) error {
 
 	go func() {
 		defer wg.Done()
-		r = bytes.NewReader(buf.Bytes())
+		r, _ := NewReader(*p)
 
 		img, _, err := image.DecodeConfig(r)
 		if err != nil {
@@ -120,7 +118,7 @@ func (p *Photo) ProcessMeta(r io.Reader) error {
 
 	go func() {
 		defer wg.Done()
-		r = bytes.NewReader(buf.Bytes())
+		r, _ := NewReader(*p)
 
 		placeholder := generatePlaceholderURI(r)
 		p.PlaceholderURI = template.URL(placeholder)
@@ -130,7 +128,8 @@ func (p *Photo) ProcessMeta(r io.Reader) error {
 	return nil
 }
 
-func (p *Photo) Upload(r io.Reader, store storage.Storage) error {
+func (p *Photo) Upload(store storage.Storage) error {
+	r, _ := NewReader(*p)
 	purl, err := store.Upload(r, p.Path)
 	p.URL = purl
 	return err

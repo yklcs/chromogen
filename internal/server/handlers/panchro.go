@@ -8,11 +8,11 @@ import (
 	"github.com/yklcs/panchro/internal/render"
 )
 
-type IndexHandler struct {
+type PanchroHandler struct {
 	Photos *photos.Photos
 	Conf   *config.Config
 }
 
-func (h IndexHandler) Get(w http.ResponseWriter, r *http.Request) {
-	render.RenderIndex(w, h.Photos, h.Conf)
+func (h PanchroHandler) Get(w http.ResponseWriter, r *http.Request) {
+	render.RenderPanchro(w, h.Photos, h.Conf)
 }

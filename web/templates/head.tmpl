@@ -1,0 +1,30 @@
+{{ define "head" }}
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ .Config.Title }}</title>
+    <link
+      rel="stylesheet"
+      href="{{ RootResolver .Config.StaticDir `index.css` }}"
+    />
+    <style>
+      @font-face {
+        font-style: normal;
+        font-weight: 400;
+        src: url("{{RootResolver .Config.StaticDir `/fonts/IBMPlexSans-400-normal.woff2`}}")
+          format("woff2");
+        font-family: "IBM Plex Sans";
+        font-display: block;
+      }
+      @font-face {
+        font-style: italic;
+        font-weight: 400;
+        src: url("{{RootResolver .Config.StaticDir `/fonts/IBMPlexSans-400-italic.woff2`}}")
+          format("woff2");
+        font-family: "IBM Plex Sans";
+        font-display: block;
+      }
+    </style>
+  </head>
+{{ end }}

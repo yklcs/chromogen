@@ -21,8 +21,8 @@ func NewLocalStorage(dir string) (*LocalStorage, error) {
 }
 
 func (s *LocalStorage) Upload(r io.Reader, fpath string) (string, error) {
-	fpath = path.Join(s.dir, fpath)
-	f, err := os.Create(fpath)
+	fpathjoined := path.Join(s.dir, fpath)
+	f, err := os.Create(fpathjoined)
 	if err != nil {
 		return "", err
 	}

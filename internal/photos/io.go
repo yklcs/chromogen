@@ -35,7 +35,6 @@ func MatchExts(dir string, exts []string) ([]string, error) {
 // ProcessFS reads and processes photo data from the filesystem
 func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality int) error {
 	store, err := storage.NewLocalStorage(out)
-	ps.store = store
 	if err != nil {
 		return err
 	}
@@ -56,8 +55,6 @@ func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality
 			return err
 		}
 		defer fin.Close()
-		var buf bytes.Buffer
-		buf.ReadFrom(fin)
 
 		relpath, err := filepath.Rel(in, fpath)
 		if err != nil {
@@ -68,10 +65,12 @@ func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality
 		if err != nil {
 			return err
 		}
+		p.Open()
+		p.ReadFrom(fin)
 
 		metaDone := make(chan bool, 1)
-		go func() {
-			err = p.ProcessMeta(bytes.NewReader(buf.Bytes()))
+		func() {
+			err = p.ProcessMeta()
 			if err != nil {
 				log.Fatalln(err)
 			}
@@ -84,21 +83,21 @@ func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality
 			defer bar.Add(1)
 
 			w, h := p.Width, p.Height
-			var buf2 bytes.Buffer
+			var outbuf bytes.Buffer
+			r, _ := photo.NewReader(p)
 			if compress {
-				w, h, err = photo.ResizeAndCompress(bytes.NewReader(buf.Bytes()), &buf2, longSideSize, quality)
-				if err != nil {
-					log.Fatalln(err)
-				}
+				p.ResizeAndCompress(longSideSize, quality)
 			} else {
-				buf2 = buf
+				photo.ToJPEG(r, &outbuf, quality)
 			}
 			<-metaDone
 
 			p.Width = w
 			p.Height = h
 
-			p.Upload(bytes.NewReader(buf2.Bytes()), store)
+			p.Upload(store)
+			p.Close()
+			ps.Set(p)
 		}()
 	}
 

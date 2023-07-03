@@ -1,33 +1,12 @@
 {{ define "index" }}
   <!DOCTYPE html>
   <html lang="en">
-    <head>
-      <meta charset="utf-8" />
-      <link rel="icon" type="image/svg+xml" href="/example/favicon.svg" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="stylesheet" href="{{ RootResolver `index.css` }}" />
-      <title>{{ .Config.Title }}</title>
-      <script src="{{ RootResolver `index.js` }}" defer></script>
-    <style>
-      @font-face {
-        font-style: normal;
-        font-weight: 400;
-        src: url("{{RootResolver `/fonts/IBMPlexSans-400-normal.woff2`}}")
-          format("woff2");
-        font-family: "IBM Plex Sans";
-        font-display: block;
-      }
-      @font-face {
-        font-style: italic;
-        font-weight: 400;
-        src: url("{{RootResolver `/fonts/IBMPlexSans-400-italic.woff2`}}")
-          format("woff2");
-        font-family: "IBM Plex Sans";
-        font-display: block;
-      }
-    </style>
-    </head>
+    {{ template "head" . }}
     <body>
+      <script
+        src="{{ RootResolver .Config.StaticDir `index.js` }}"
+        defer
+      ></script>
       <div class="index-layout">
         <header class="index-header">
           <h1 id="site-title">
@@ -49,7 +28,8 @@
             thumbs-grid
           {{- end -}}"
         >
-          {{ range $i, $img := .Photos.Slice }}
+          {{ range $i, $id := .Photos.IDs }}
+            {{ $img := $.Photos.Get $id }}
             {{ $idxp := IndexPhoto $img $i }}
             {{ template "thumb" $idxp }}
           {{ end }}

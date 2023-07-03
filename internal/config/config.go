@@ -16,6 +16,7 @@ type Config struct {
 	Title           string   `json:"title"`
 	Root            string   `json:"root"`
 	DefaultViewMode ViewMode `json:"default_view_mode"`
+	StaticDir       string
 }
 
 func ReadConfig(path string) (*Config, error) {
@@ -31,5 +32,6 @@ func ReadConfig(path string) (*Config, error) {
 		return nil, err
 	}
 
+	c.StaticDir = "static"
 	return c, nil
 }

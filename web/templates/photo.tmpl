@@ -1,31 +1,7 @@
 {{ define "photo" }}
   <!DOCTYPE html>
   <html lang="en">
-    <head>
-      <meta charset="utf-8" />
-      <link rel="icon" type="image/svg+xml" href="/example/favicon.svg" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <link rel="stylesheet" href="{{ RootResolver `index.css` }}" />
-      <title>{{ .Config.Title }}</title>
-    <style>
-      @font-face {
-        font-style: normal;
-        font-weight: 400;
-        src: url("{{RootResolver `/fonts/IBMPlexSans-400-normal.woff2`}}")
-          format("woff2");
-        font-family: "IBM Plex Sans";
-        font-display: block;
-      }
-      @font-face {
-        font-style: italic;
-        font-weight: 400;
-        src: url("{{RootResolver `/fonts/IBMPlexSans-400-italic.woff2`}}")
-          format("woff2");
-        font-family: "IBM Plex Sans";
-        font-display: block;
-      }
-    </style>
-    </head>
+    {{ template "head" . }}
     <body>
       <div class="backlogo">
         <a href="{{ RootResolver `/` }}"> ↩ </a>
@@ -51,7 +27,7 @@
             class="full"
             width="{{ .Photo.Width }}"
             height="{{ .Photo.Height }}"
-            src="{{ RootResolver .Photo.Path }}"
+            src="{{ RootResolver .Photo.URL }}"
             alt=""
           />
         </div>

@@ -8,6 +8,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/dgraph-io/badger/v3"
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/render"
@@ -19,7 +20,6 @@ func Build(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
 	out := flags.String("o", "dist", "output directory")
 	confPath := flags.String("c", "panchro.json", "configuration json file path")
-	// var concurrency = flags.Int("concurrency", 128, "concurrency limit, edit depending on memory usage")
 	compress := flags.Bool("compress", true, "enable image compression")
 
 	flags.Usage = func() {
@@ -52,21 +52,15 @@ func Build(args []string) error {
 		return err
 	}
 
-	ps := photos.NewPhotos()
-	err = ps.ProcessFS(in, *out, *compress, 2048, 75)
+	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true))
 	if err != nil {
 		return err
 	}
 
-	if ps.Len() == 0 {
-		return errors.New("no images found in " + in)
-	}
-
-	if *compress {
-		// err = ps.Compress()
-		// if err != nil {
-		// return err
-		// }
+	ps := photos.NewPhotos(db)
+	err = ps.ProcessFS(in, *out, *compress, 2048, 75)
+	if err != nil {
+		return err
 	}
 
 	indexHTML, err := os.Create(path.Join(*out, "index.html"))
@@ -75,19 +69,24 @@ func Build(args []string) error {
 	}
 	defer indexHTML.Close()
 
-	err = render.RenderIndex(indexHTML, ps, conf)
+	err = render.RenderIndex(indexHTML, &ps, conf)
 	if err != nil {
 		return err
 	}
 
 	static, _ := fs.Sub(web.Content, "static")
-	err = render.CopyFS(static, *out)
+	staticDir := path.Join(*out, conf.StaticDir)
+	err = os.MkdirAll(staticDir, 0644)
+	if err != nil {
+		return err
+	}
+	err = render.CopyFS(static, staticDir)
 	if err != nil {
 		return err
 	}
 
-	for i := 0; i < ps.Len(); i++ {
-		dir := path.Join(*out, ps.Get(i).ID)
+	for _, id := range ps.IDs() {
+		dir := path.Join(*out, id)
 		err := os.MkdirAll(dir, 0755)
 		if err != nil {
 			return err
@@ -100,7 +99,8 @@ func Build(args []string) error {
 
 		defer imageHTML.Close()
 
-		err = render.RenderPhoto(imageHTML, *ps.Get(i), conf)
+		p, _ := ps.Get(id)
+		err = render.RenderPhoto(imageHTML, &p, conf)
 		if err != nil {
 			return err
 		}

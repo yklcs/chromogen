@@ -24,16 +24,17 @@ func IndexPhoto(img photo.Photo, index int) IndexedPhoto {
 	}
 }
 
-func NewRootResolver(conf *config.Config) func(p string) string {
-	return func(p string) string {
-		return path.Join("/", conf.Root, p)
+func NewRootResolver(conf *config.Config) func(p ...string) string {
+	return func(p ...string) string {
+		p = append([]string{"/", conf.Root}, p...)
+		return path.Join(p...)
 	}
 }
 
-func RenderIndex(w io.Writer, ps photos.Photos, conf *config.Config) error {
+func RenderIndex(w io.Writer, ps *photos.Photos, conf *config.Config) error {
 	type IndexTemplateData struct {
-		Photos photos.Photos
-		config.Config
+		Photos *photos.Photos
+		*config.Config
 	}
 
 	templates, _ := fs.Sub(web.Content, "templates")
@@ -42,12 +43,12 @@ func RenderIndex(w io.Writer, ps photos.Photos, conf *config.Config) error {
 		"IndexPhoto":   IndexPhoto,
 		"RootResolver": NewRootResolver(conf),
 	})
-	tmpl, err := tmpl.ParseFS(templates, "index.tmpl", "thumb.tmpl")
+	tmpl, err := tmpl.ParseFS(templates, "index.tmpl", "head.tmpl", "thumb.tmpl")
 	if err != nil {
 		return err
 	}
 
-	err = tmpl.ExecuteTemplate(w, "index", IndexTemplateData{ps, *conf})
+	err = tmpl.ExecuteTemplate(w, "index", IndexTemplateData{ps, conf})
 	if err != nil {
 		return err
 	}
@@ -55,21 +56,45 @@ func RenderIndex(w io.Writer, ps photos.Photos, conf *config.Config) error {
 	return nil
 }
 
-func RenderPhoto(w io.Writer, img photo.Photo, conf *config.Config) error {
+func RenderPhoto(w io.Writer, img *photo.Photo, conf *config.Config) error {
 	type PhotoTemplateData struct {
-		Photo  photo.Photo
-		Config config.Config
+		Photo  *photo.Photo
+		Config *config.Config
 	}
 
 	templates, _ := fs.Sub(web.Content, "templates")
 	tmpl := template.New("")
 	tmpl = tmpl.Funcs(template.FuncMap{"RootResolver": NewRootResolver(conf)})
-	tmpl, err := tmpl.ParseFS(templates, "photo.tmpl")
+	tmpl, err := tmpl.ParseFS(templates, "photo.tmpl", "head.tmpl")
 	if err != nil {
 		return err
 	}
 
-	err = tmpl.ExecuteTemplate(w, "photo", PhotoTemplateData{img, *conf})
+	err = tmpl.ExecuteTemplate(w, "photo", PhotoTemplateData{img, conf})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RenderPanchro(w io.Writer, ps *photos.Photos, conf *config.Config) error {
+	type PanchroTemplateData struct {
+		Photos *photos.Photos
+		*config.Config
+	}
+
+	templates, _ := fs.Sub(web.Content, "templates")
+	tmpl := template.New("")
+	tmpl = tmpl.Funcs(template.FuncMap{
+		"RootResolver": NewRootResolver(conf),
+	})
+	tmpl, err := tmpl.ParseFS(templates, "panchro.tmpl", "head.tmpl", "thumb.tmpl")
+	if err != nil {
+		return err
+	}
+
+	err = tmpl.ExecuteTemplate(w, "panchro", PanchroTemplateData{ps, conf})
 	if err != nil {
 		return err
 	}
