@@ -3,14 +3,29 @@
   <html lang="en">
     {{ template "head" . }}
     <body>
-      <div class="backlogo">
-        <a href="{{ RootResolver `/` }}"> ↩ </a>
+      <div class="index-layout">
+        <header class="index-header">
+          <h1 id="site-title">
+            {{ .Config.Title }}
+          </h1>
+        </header>
+        <form
+          action="{{ RootResolver `/photos` }}"
+          method="post"
+          accept="image/*"
+          enctype="multipart/form-data"
+          id="panchro-post"
+        >
+          <input type="file" name="file" id="file" />
+          <input
+            type="text"
+            name="token"
+            id="panchro-token"
+            placeholder="Token"
+          />
+          <button id="panchro-submit">Submit</button>
+        </form>
       </div>
-      <form action="{{ RootResolver `/photos` }}" method="post" enctype="multipart/form-data">
-        <input type="file" name="file" id="file">
-        <input type="password" name="token" id="token">
-        <button>Submit</button>
-      </form>
     </body>
   </html>
 {{ end }}

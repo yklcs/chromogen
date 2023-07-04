@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "format": "prettier -w **/*.{tmpl,css}"
+    "format": "prettier -w \"**/*.{tmpl,css}\""
   },
   "devDependencies": {
     "prettier-plugin-go-template": "^0.0.13",

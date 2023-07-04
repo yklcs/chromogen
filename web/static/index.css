@@ -4,6 +4,7 @@
   --fg: #000000;
   --fg-sub: #aaaaaa;
   --bg: #ffffff;
+  --bg-sub: #eaeaea;
 }
 
 /* global */
@@ -261,4 +262,36 @@ img.full {
   height: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+
+#panchro-post {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 30rem;
+}
+
+input {
+  outline: none;
+  border: none;
+  font-size: 1em;
+}
+
+input::file-selector-button {
+  outline: none;
+  border: none;
+  background-color: var(--bg-sub);
+  padding: 1rem;
+  font-size: 1em;
+}
+
+input#panchro-token {
+  border: 1px solid;
+  border-color: var(--bg-sub);
+  padding: 1rem;
+}
+
+button#panchro-submit {
+  background-color: var(--bg-sub);
+  padding: 1rem;
 }
