@@ -13,9 +13,11 @@ const (
 )
 
 type Config struct {
-	Title           string   `json:"title"`
-	Root            string   `json:"root"`
-	DefaultViewMode ViewMode `json:"default_view_mode"`
+	Title           string                 `json:"title"`
+	Root            string                 `json:"root"`
+	DefaultViewMode ViewMode               `json:"default_view_mode"`
+	Theme           string                 `json:"theme"`
+	ThemeConfig     map[string]interface{} `json:"theme_config"`
 	StaticDir       string
 }
 

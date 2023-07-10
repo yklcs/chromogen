@@ -28,11 +28,13 @@ func CopyFS(fsys fs.FS, dst string) error {
 			if err != nil {
 				return err
 			}
+			defer fsrc.Close()
 
 			fdst, err := os.Create(path.Join(dst, p))
 			if err != nil {
 				return err
 			}
+			defer fdst.Close()
 
 			io.Copy(fdst, fsrc)
 		}

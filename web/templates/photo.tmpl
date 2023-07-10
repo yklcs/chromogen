@@ -3,8 +3,11 @@
   <html lang="en">
     {{ template "head" . }}
     <body>
-      <div class="backlogo">
-        <a href="{{ RootResolver `/` }}"> ↩ </a>
+      <div>
+        <a href="{{ RootResolver `/` }}" class="back">
+          <span class="backlogo">↩</span>
+          {{ .Config.Title }}
+        </a>
       </div>
       <div class="image-layout">
         <div class="image-sidebar">

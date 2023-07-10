@@ -10,7 +10,6 @@ import (
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/server/handlers"
 	"github.com/yklcs/panchro/storage"
-	"github.com/yklcs/panchro/web"
 	_ "gocloud.dev/blob/fileblob"
 )
 
@@ -25,9 +24,11 @@ func NewServer(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 		Photos: ps,
 		Store:  store,
 	}
-	staticFs, _ := fs.Sub(web.Content, "static")
+
+	theme := config.LoadTheme(conf)
+	staticFS, _ := fs.Sub(theme, "static")
 	staticHandler := handlers.StaticHandler{
-		Handler: http.FileServer(http.FS(staticFs)),
+		Handler: http.FileServer(http.FS(staticFS)),
 		Conf:    conf,
 	}
 	photoHandler := handlers.PhotoHandler{Photos: ps, Conf: conf}

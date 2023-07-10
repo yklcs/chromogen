@@ -5,11 +5,11 @@ import (
 	"io"
 	"io/fs"
 	"path"
+	"strings"
 
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photo"
 	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/web"
 )
 
 type IndexedPhoto struct {
@@ -31,19 +31,26 @@ func NewRootResolver(conf *config.Config) func(p ...string) string {
 	}
 }
 
+func RenderNewline(s string) template.HTML {
+	return template.HTML(strings.ReplaceAll(s, "\n", "<br/>"))
+}
+
 func RenderIndex(w io.Writer, ps *photos.Photos, conf *config.Config) error {
 	type IndexTemplateData struct {
 		Photos *photos.Photos
 		*config.Config
 	}
 
-	templates, _ := fs.Sub(web.Content, "templates")
+	theme := config.LoadTheme(conf)
+	templatesFS, _ := fs.Sub(theme, "templates")
+
 	tmpl := template.New("")
 	tmpl = tmpl.Funcs(template.FuncMap{
-		"IndexPhoto":   IndexPhoto,
-		"RootResolver": NewRootResolver(conf),
+		"IndexPhoto":    IndexPhoto,
+		"RootResolver":  NewRootResolver(conf),
+		"RenderNewline": RenderNewline,
 	})
-	tmpl, err := tmpl.ParseFS(templates, "index.tmpl", "head.tmpl", "thumb.tmpl")
+	tmpl, err := tmpl.ParseFS(templatesFS, "index.tmpl", "head.tmpl", "thumb.tmpl")
 	if err != nil {
 		return err
 	}
@@ -62,10 +69,12 @@ func RenderPhoto(w io.Writer, img *photo.Photo, conf *config.Config) error {
 		Config *config.Config
 	}
 
-	templates, _ := fs.Sub(web.Content, "templates")
+	theme := config.LoadTheme(conf)
+	templatesFS, _ := fs.Sub(theme, "templates")
+
 	tmpl := template.New("")
 	tmpl = tmpl.Funcs(template.FuncMap{"RootResolver": NewRootResolver(conf)})
-	tmpl, err := tmpl.ParseFS(templates, "photo.tmpl", "head.tmpl")
+	tmpl, err := tmpl.ParseFS(templatesFS, "photo.tmpl", "head.tmpl")
 	if err != nil {
 		return err
 	}
@@ -84,12 +93,14 @@ func RenderPanchro(w io.Writer, ps *photos.Photos, conf *config.Config) error {
 		*config.Config
 	}
 
-	templates, _ := fs.Sub(web.Content, "templates")
+	theme := config.LoadTheme(conf)
+	templatesFS, _ := fs.Sub(theme, "templates")
+
 	tmpl := template.New("")
 	tmpl = tmpl.Funcs(template.FuncMap{
 		"RootResolver": NewRootResolver(conf),
 	})
-	tmpl, err := tmpl.ParseFS(templates, "panchro.tmpl", "head.tmpl", "thumb.tmpl")
+	tmpl, err := tmpl.ParseFS(templatesFS, "panchro.tmpl", "head.tmpl", "thumb.tmpl")
 	if err != nil {
 		return err
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/render"
-	"github.com/yklcs/panchro/web"
 	_ "gocloud.dev/blob/fileblob"
 )
 
@@ -52,7 +51,7 @@ func Build(args []string) error {
 		return err
 	}
 
-	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true))
+	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true).WithLoggingLevel(badger.ERROR))
 	if err != nil {
 		return err
 	}
@@ -74,13 +73,14 @@ func Build(args []string) error {
 		return err
 	}
 
-	static, _ := fs.Sub(web.Content, "static")
+	themeFS := config.LoadTheme(conf)
+	staticFS, _ := fs.Sub(themeFS, "static")
 	staticDir := path.Join(*out, conf.StaticDir)
-	err = os.MkdirAll(staticDir, 0644)
+	err = os.MkdirAll(staticDir, 0755)
 	if err != nil {
 		return err
 	}
-	err = render.CopyFS(static, staticDir)
+	err = render.CopyFS(staticFS, staticDir)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,6 @@ func Build(args []string) error {
 		if err != nil {
 			return err
 		}
-
 		defer imageHTML.Close()
 
 		p, _ := ps.Get(id)

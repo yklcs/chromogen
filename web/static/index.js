@@ -1,21 +1,29 @@
+/// <reference lib="dom" />
+
+/**  @type {typeof document.querySelector} */
 const $ = document.querySelector.bind(document)
+/**  @type {typeof document.querySelectorAll} */
 const $$ = document.querySelectorAll.bind(document)
 
+const viewmodes = ["gallery", "grid"]
+
+const initialViewmode = localStorage.getItem("viewmode")
+if (initialViewmode !== null) {
+  $("button#viewmode-toggler").innerHTML = initialViewmode
+  $("div#thumbs").className = ""
+  $("div#thumbs").classList.add(`thumbs-${initialViewmode}`)
+}
+
+$("button#viewmode-toggler").classList.toggle("noscript")
 $("button#viewmode-toggler").addEventListener("click", (ev) => {
   const button = ev.target
-  const thumbs = $("div#thumbs")
 
-  const gridText = "Grid"
-  const galleryText = "Gallery"
-
-  thumbs.classList.toggle("thumbs-gallery")
-  thumbs.classList.toggle("thumbs-grid")
-
-  if (button.innerHTML === galleryText) {
-    button.innerHTML = gridText
-  } else if (button.innerHTML === gridText) {
-    button.innerHTML = galleryText
-  }
+  const idx = viewmodes.findIndex((mode) => mode === button.innerHTML)
+  const newmode = viewmodes[(idx + 1) % viewmodes.length]
+  localStorage.setItem("viewmode", newmode)
+  button.innerHTML = newmode
+  $("div#thumbs").className = ""
+  $("div#thumbs").classList.add(`thumbs-${newmode}`)
 })
 
 $$("figure").forEach((fig) => {

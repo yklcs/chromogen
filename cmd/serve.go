@@ -22,7 +22,7 @@ func Serve(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
 	storename := flags.String("s", "panchro", "storage (local/s3)")
 	confPath := flags.String("c", "panchro.json", "configuration json file path")
-	var port = flags.String("p", "8000", "port")
+	port := flags.String("p", "8000", "port")
 
 	flags.Usage = func() {
 		fmt.Fprintln(flags.Output(), "Usage: panchro serve [...flags] <input url>")
@@ -47,10 +47,14 @@ func Serve(args []string) error {
 		return err
 	}
 
-	db, err := badger.Open(badger.DefaultOptions(path.Join(*storename, "panchro.db")))
+	dbPath := path.Join(*storename, "panchro.db")
+	db, err := badger.Open(
+		badger.DefaultOptions(dbPath).WithLoggingLevel(badger.WARNING),
+	)
 	if err != nil {
 		return err
 	}
+	defer db.Close()
 
 	store, err := storage.NewLocalStorage(*storename)
 	if err != nil {

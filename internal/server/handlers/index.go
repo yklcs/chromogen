@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/yklcs/panchro/internal/config"
@@ -14,5 +15,8 @@ type IndexHandler struct {
 }
 
 func (h IndexHandler) Get(w http.ResponseWriter, r *http.Request) {
-	render.RenderIndex(w, h.Photos, h.Conf)
+	err := render.RenderIndex(w, h.Photos, h.Conf)
+	if err != nil {
+		log.Println(err)
+	}
 }

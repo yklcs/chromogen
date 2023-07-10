@@ -12,13 +12,18 @@ type Photos struct {
 	db *badger.DB
 }
 
+var IndexKey = []byte{0}
+
 func NewPhotos(db *badger.DB) Photos {
 	db.Update(func(txn *badger.Txn) error {
 		mapb, err := json.Marshal([]string{})
 		if err != nil {
 			return err
 		}
-		txn.Set([]byte{0}, mapb)
+		if _, err := txn.Get(IndexKey); err == badger.ErrKeyNotFound {
+			txn.Set(IndexKey, mapb)
+		}
+
 		return nil
 	})
 
@@ -36,7 +41,7 @@ func (ps Photos) Add(val photo.Photo) {
 		}
 		txn.Set([]byte(val.ID), valb)
 
-		idsitem, err := txn.Get([]byte{0})
+		idsitem, err := txn.Get(IndexKey)
 		if err != nil {
 			return err
 		}
@@ -53,7 +58,7 @@ func (ps Photos) Add(val photo.Photo) {
 			return err
 		}
 
-		err = txn.Set([]byte{0}, idsb)
+		err = txn.Set(IndexKey, idsb)
 		return err
 	})
 }
@@ -72,7 +77,7 @@ func (ps Photos) Set(val photo.Photo) {
 func (ps Photos) IDs() []string {
 	ids := []string{}
 	ps.db.View(func(txn *badger.Txn) error {
-		idsitem, err := txn.Get([]byte{0})
+		idsitem, err := txn.Get(IndexKey)
 		if err != nil {
 			return err
 		}
@@ -84,6 +89,10 @@ func (ps Photos) IDs() []string {
 	})
 
 	return ids
+}
+
+func (ps Photos) Len() int {
+	return len(ps.IDs())
 }
 
 func (ps Photos) Get(id string) (photo.Photo, error) {
@@ -111,7 +120,7 @@ func (ps Photos) Delete(id string) (photo.Photo, error) {
 			return err
 		}
 
-		idsitem, err := txn.Get([]byte{0})
+		idsitem, err := txn.Get(IndexKey)
 		if err != nil {
 			return err
 		}
@@ -130,7 +139,7 @@ func (ps Photos) Delete(id string) (photo.Photo, error) {
 		if err != nil {
 			return err
 		}
-		err = txn.Set([]byte{0}, idsb)
+		err = txn.Set(IndexKey, idsb)
 
 		return err
 	})

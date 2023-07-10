@@ -12,14 +12,26 @@
           <h1 id="site-title">
             {{ .Config.Title }}
           </h1>
-          <button id="viewmode-toggler">
-            {{- if eq .Config.DefaultViewMode "gallery" -}}
-              Gallery
-            {{- else -}}
-              Grid
-            {{- end -}}
+          <button id="viewmode-toggler" class="noscript">
+            {{- .Config.DefaultViewMode -}}
           </button>
         </header>
+        <div id="info">
+          {{ if .Config.ThemeConfig.bio }}
+            <p class="bio">
+              {{ RenderNewline .Config.ThemeConfig.bio }}
+            </p>
+            <div class="pills">
+              <span> {{ .Photos.Len }} photos </span>
+              {{ if .Config.ThemeConfig.links }}
+                <span>·</span>
+                {{ range $name, $href := .Config.ThemeConfig.links }}
+                  <a href="{{ $href }}" class="pill">{{ $name }}↗</a>
+                {{ end }}
+              {{ end }}
+            </div>
+          {{ end }}
+        </div>
         <div
           id="thumbs"
           class="{{- if eq .Config.DefaultViewMode `gallery` -}}

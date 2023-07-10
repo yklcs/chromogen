@@ -51,6 +51,10 @@ button {
   font: inherit;
 }
 
+.noscript {
+  display: none;
+}
+
 /* index page */
 
 #site-title {
@@ -73,13 +77,13 @@ button {
 .index-header {
   display: flex;
   justify-content: space-between;
-  margin: 0 0 2rem;
-  padding: 2.5rem 0;
+  padding: 2rem 0;
 }
 
 #viewmode-toggler {
   color: var(--fg-sub);
   text-align: inherit;
+  text-transform: capitalize;
 }
 @media screen and (hover: hover) {
   #viewmode-toggler:hover {
@@ -88,6 +92,29 @@ button {
 }
 #viewmode-toggler:active {
   color: var(--fg-sub);
+}
+
+#info {
+  margin: 2rem 0 5rem 0;
+  max-width: 50rem;
+}
+
+p.bio {
+  font-size: 1.25em;
+}
+
+.pill {
+  border-radius: 0.2rem;
+  background: var(--bg-sub);
+  padding: 0.3rem 0.4rem;
+  line-height: 1em;
+}
+
+div.pills {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1ch;
 }
 
 .overflow-wrapper {
@@ -232,27 +259,33 @@ img.thumb.thumb-unloaded {
   gap: 1ch;
 }
 
-.backlogo {
+.back {
+  display: flex;
   position: absolute;
   top: 0;
   left: 0;
-  transform: scaleY(-100%);
+  align-items: center;
+  gap: 1ch;
   margin: 2rem;
   color: var(--fg-sub);
-  font-size: 1.5em;
 }
 @media screen and (max-width: 60rem) {
-  .backlogo {
+  .back {
     margin: 1rem;
   }
 }
 @media screen and (hover: hover) {
-  .backlogo:hover {
+  .back:hover {
     color: inherit;
   }
 }
-.backlogo:active {
+.back:active {
   color: var(--fg-sub);
+}
+
+.backlogo {
+  transform: scaleY(-100%);
+  font-size: 1.5em;
 }
 
 img.full {

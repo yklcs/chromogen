@@ -1,5 +1,12 @@
 {
   "title": "Panchro Demo",
   "root": "",
-  "default_view_mode": "gallery"
+  "default_view_mode": "gallery",
+  "theme": "./web",
+  "theme_config": {
+    "bio": "This is a demo instance for Panchro, an open source image gallery.\n Run your own instance by clicking the Github link below.",
+    "links": {
+      "Github": "https://github.com/yklcs/panchro"
+    }
+  }
 }
