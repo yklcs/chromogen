@@ -2,33 +2,45 @@
 
 Self-hosted image gallery.
 
-Why would anyone need this?
+Some key features:
 
 - Own your own images
-- S3 integration
-- EXIF/metadata support
+- EXIF metadata support
+- Themable and extendable
+- Static site generator and server modes
 
-## Usage examples
+## Auth
+
+On startup, a random token is generated and output to stdout. This token should be used for API calls in the form of:
+
+```http
+Authorization: Bearer tokengoeshere
+```
+
+Or, in the admin page.
+
+Currently, tokens live as long as the process.
+
+## Usage
+
+Building/serving related config is done through CLI flags, and site related config is done through a JSON file.
 
 ```shell
 # build static site (input from ./images, output to ./dist)
 $ panchro build images
 
-# serve cms (save photos to ./dist)
+# serve (save photos and db to ./panchro, listen on :8000)
 $ panchro serve
-
-# serve cms (save photos to s3://photos)
-$ panchro serve -storage s3://photos
 ```
 
-## Backends
+## Theming
 
-Local backend and S3 backends are supported. In both backends, original photos are left untouched.
+Theming is performed through [Go templates](https://pkg.go.dev/html/template) and static files.
 
-On the local backend, copies of the original photos and their compressed versions are created in the output directory.
-On the S3 backend, files are downloaded from S3 and copies of the original photos and their compressed versions are created in the output directory.
+Look at [web/](web/) for an example of the default theme. Mandatory template files are:
 
-Uploads will not update the backend source directory or S3 bucket.
+- index.tmpl
+- photo.tmpl
+- panchro.tmpl
 
-The `-urlprefix` flag can be used to use a custom URL prefix (CDN, S3, etc.) for images.
-In this case, image URLs will use the URL prefix.
+Theme-specific config should go in `"theme_config"` of the config file.

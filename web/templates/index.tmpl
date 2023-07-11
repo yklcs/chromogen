@@ -10,7 +10,9 @@
       <div class="index-layout">
         <header class="index-header">
           <h1 id="site-title">
-            {{ .Config.Title }}
+            <a href="/">
+              {{ .Config.Title }}
+            </a>
           </h1>
           <button id="viewmode-toggler" class="noscript">
             {{- .Config.DefaultViewMode -}}

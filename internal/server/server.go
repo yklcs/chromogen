@@ -1,6 +1,8 @@
 package server
 
 import (
+	"crypto/rand"
+	"fmt"
 	"io/fs"
 	"net/http"
 	"path"
@@ -9,6 +11,7 @@ import (
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/server/handlers"
+	"github.com/yklcs/panchro/internal/utils"
 	"github.com/yklcs/panchro/storage"
 	_ "gocloud.dev/blob/fileblob"
 )
@@ -19,6 +22,11 @@ type Server struct {
 
 func NewServer(ps *photos.Photos, store storage.Storage, conf *config.Config) (*Server, error) {
 	r := chi.NewRouter()
+
+	randbytes := make([]byte, 32)
+	rand.Read(randbytes)
+	token := utils.Base58Encode(randbytes)
+	fmt.Println(token)
 
 	photosHandler := handlers.PhotosHandler{
 		Photos: ps,
@@ -42,7 +50,7 @@ func NewServer(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 		Conf:   conf,
 	}
 
-	auth := Auth("secret")
+	auth := Auth(token)
 	r.With(auth).Post("/photos", photosHandler.Post)
 	r.With(auth).Delete("/photos/{id}", photosHandler.Delete)
 	r.Get("/photos", photosHandler.Get)
@@ -50,7 +58,16 @@ func NewServer(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 	r.Get("/{id}", photoHandler.Get)
 	r.Get("/{id}.jpg", imageHandler.Get)
 	r.Get("/", indexHandler.Get)
-	r.Get("/panchro", panchroHandler.Get)
+	// r.With(BasicAuth(token)).Get("/panchro", panchroHandler.Get)
+	r.Route("/panchro", func(r chi.Router) {
+		r.Use(AuthPage(token, conf))
+		r.Get("/*", panchroHandler.Get)
+	})
+
+	// r.Group(func(r chi.Router) {
+	// 	r.Use(BasicAuth(token))
+	// 	r.Get("/panchro", panchroHandler.Get)
+	// })
 
 	return &Server{
 		Router: r,

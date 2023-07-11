@@ -44,13 +44,11 @@ func RenderIndex(w io.Writer, ps *photos.Photos, conf *config.Config) error {
 	theme := config.LoadTheme(conf)
 	templatesFS, _ := fs.Sub(theme, "templates")
 
-	tmpl := template.New("")
-	tmpl = tmpl.Funcs(template.FuncMap{
+	tmpl, err := template.New("").Funcs(template.FuncMap{
 		"IndexPhoto":    IndexPhoto,
 		"RootResolver":  NewRootResolver(conf),
 		"RenderNewline": RenderNewline,
-	})
-	tmpl, err := tmpl.ParseFS(templatesFS, "index.tmpl", "head.tmpl", "thumb.tmpl")
+	}).ParseFS(templatesFS, "index.tmpl", "head.tmpl", "thumb.tmpl")
 	if err != nil {
 		return err
 	}
@@ -72,9 +70,7 @@ func RenderPhoto(w io.Writer, img *photo.Photo, conf *config.Config) error {
 	theme := config.LoadTheme(conf)
 	templatesFS, _ := fs.Sub(theme, "templates")
 
-	tmpl := template.New("")
-	tmpl = tmpl.Funcs(template.FuncMap{"RootResolver": NewRootResolver(conf)})
-	tmpl, err := tmpl.ParseFS(templatesFS, "photo.tmpl", "head.tmpl")
+	tmpl, err := template.New("").Funcs(template.FuncMap{"RootResolver": NewRootResolver(conf)}).ParseFS(templatesFS, "photo.tmpl", "head.tmpl")
 	if err != nil {
 		return err
 	}
@@ -96,16 +92,37 @@ func RenderPanchro(w io.Writer, ps *photos.Photos, conf *config.Config) error {
 	theme := config.LoadTheme(conf)
 	templatesFS, _ := fs.Sub(theme, "templates")
 
-	tmpl := template.New("")
-	tmpl = tmpl.Funcs(template.FuncMap{
+	tmpl, err := template.New("").Funcs(template.FuncMap{
 		"RootResolver": NewRootResolver(conf),
-	})
-	tmpl, err := tmpl.ParseFS(templatesFS, "panchro.tmpl", "head.tmpl", "thumb.tmpl")
+	}).ParseFS(templatesFS, "panchro.tmpl", "head.tmpl", "thumb.tmpl")
 	if err != nil {
 		return err
 	}
 
 	err = tmpl.ExecuteTemplate(w, "panchro", PanchroTemplateData{ps, conf})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func RenderAuth(w io.Writer, conf *config.Config) error {
+	type AuthTemplateData struct {
+		*config.Config
+	}
+
+	theme := config.LoadTheme(conf)
+	templatesFS, _ := fs.Sub(theme, "templates")
+
+	tmpl, err := template.New("").Funcs(template.FuncMap{
+		"RootResolver": NewRootResolver(conf),
+	}).ParseFS(templatesFS, "auth.tmpl", "head.tmpl")
+	if err != nil {
+		return err
+	}
+
+	err = tmpl.ExecuteTemplate(w, "auth", AuthTemplateData{conf})
 	if err != nil {
 		return err
 	}
