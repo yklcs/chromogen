@@ -19,7 +19,7 @@ import (
 
 func Serve(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
-	storename := flags.String("s", "panchro", "storage (local/s3)")
+	storename := flags.String("s", "panchro", "storage folder path")
 	confPath := flags.String("c", "panchro.json", "configuration json file path")
 	port := flags.String("p", "8000", "port")
 

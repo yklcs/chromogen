@@ -4,58 +4,72 @@ Self-hosted image gallery.
 
 Some key features:
 
-- Own your own images
+- Static site generator and server modes
 - EXIF metadata support
 - Themable and extendable
-- Static site generator and server modes
-- Minimal JS, progressively enhanced (used for thumbs + `/panchro` admin page only)
+- REST API
+- Own your own images
+- Minimal JavaScript, super light
 
-## Auth
+## Get started
 
-On startup, a random token is generated and output to stdout. This token should be used for API calls in the form of:
+Download the latest release, or build and install via the Go toolchain:
 
-```http
-Authorization: Bearer tokengoeshere
+```shell
+$ go install github.com/yklcs/panchro@latest
+$ panchro serve
 ```
-
-Or, in the admin page.
-
-Currently, tokens live as long as the process.
 
 ## Usage
 
-Building/serving related config is done through CLI flags, and site related config is done through a JSON file.
+Building/serving related config is done through CLI flags, and site related config is done through [a JSON file](panchro.example.json).
 
 ```shell
 # build static site (input from ./images, output to ./dist)
 $ panchro build images
 
-# serve (save photos and db to ./panchro, listen on :8000)
+# build static site (input from ./images, output to ./out, read config from config.json)
+$ panchro build -o out -c config.json images
+
+# start server (save photos and db to ./panchro, listen on :8000)
 $ panchro serve
+
+# start server (save photos and db to ./store, listen on :1234)
+$ panchro -s store -p 1234 serve
 ```
+
+### Auth
+
+On startup, a random token is generated and output to stdout.
+This token is used for API calls and the admin page.
+Currently, tokens live as long as the process.
 
 ## API
 
+Get all photos as JSON
+
 ```http
-# Get all photos as JSON
 GET /photos
 ```
 
+Get single photo as JSON
+
 ```http
-# Get single photo as JSON
 GET /photos/{id}
 ```
 
+Delete single photo
+
 ```http
-# Delete single photo
 DELETE /photos/{id}
 Authorization: Bearer {token}
 ```
 
+Upload photo (via form data)
+
 ```http
-# Upload photo (via form data)
 POST /photos
-Content-Type multipart/form-data
+Content-Type: multipart/form-data
 Authorization: Bearer {token}
 ```
 
@@ -68,5 +82,6 @@ Look at [web/](web/) for an example of the default theme. Mandatory template fil
 - index.tmpl
 - photo.tmpl
 - panchro.tmpl
+- auth.tmpl
 
 Theme-specific config should go in `"theme_config"` of the config file.
