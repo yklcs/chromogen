@@ -19,7 +19,7 @@ import (
 
 func Serve(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
-	storepath := flags.String("s", "panchro", "photo storage folder/bucket path, use s3://... for S3")
+	storepath := flags.String("s", "panchro", "photo storage path, use s3://... for S3")
 	s3url := flags.String("s3url", "", "S3 URL root, use if S3 is behind CDN")
 	dbpath := flags.String("db", "panchro.db", "db path")
 	confpath := flags.String("c", "panchro.json", "configuration json file path")
