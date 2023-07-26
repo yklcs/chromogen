@@ -18,7 +18,6 @@ func Build(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
 	out := flags.String("o", "dist", "output directory")
 	confPath := flags.String("c", "panchro.json", "configuration json file path")
-	compress := flags.Bool("compress", true, "enable image compression")
 
 	flags.Usage = func() {
 		fmt.Fprintln(flags.Output(), "Usage: panchro build [...flags] <input url>")
@@ -56,7 +55,7 @@ func Build(args []string) error {
 	}
 
 	ps := photos.NewPhotos(db)
-	err = ps.ProcessFS(in, *out, *compress, 2048, 75)
+	err = ps.ProcessFS(in, *out, true, 2048, 75)
 	if err != nil {
 		return err
 	}
