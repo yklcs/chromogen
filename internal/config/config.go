@@ -5,17 +5,17 @@ import (
 	"os"
 )
 
-type ViewMode string
+type viewMode string
 
 const (
-	GalleryMode ViewMode = "gallery"
-	GridMode    ViewMode = "grid"
+	GalleryMode viewMode = "gallery"
+	GridMode    viewMode = "grid"
 )
 
 type Config struct {
 	Title           string                 `json:"title"`
 	Root            string                 `json:"root"`
-	DefaultViewMode ViewMode               `json:"default_view_mode"`
+	DefaultViewMode viewMode               `json:"default_view_mode"`
 	Theme           string                 `json:"theme"`
 	ThemeConfig     map[string]interface{} `json:"theme_config"`
 	StaticDir       string

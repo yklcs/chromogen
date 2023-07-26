@@ -17,7 +17,3 @@ type Storage interface {
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 	Backend() string
 }
-
-type Reader struct {
-	i int64
-}

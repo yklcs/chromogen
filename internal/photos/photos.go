@@ -142,9 +142,6 @@ func (ps Photos) Delete(id string) error {
 			return err
 		}
 
-		// i := slices.Index(ids, id)
-		// ids = slices.Delete(ids, i, i+1)
-
 		different := 0
 		for _, i := range ids {
 			if id != i {

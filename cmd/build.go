@@ -12,7 +12,6 @@ import (
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/render"
-	_ "gocloud.dev/blob/fileblob"
 )
 
 func Build(args []string) error {

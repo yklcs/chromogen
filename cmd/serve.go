@@ -15,7 +15,6 @@ import (
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/server"
 	"github.com/yklcs/panchro/storage"
-	_ "gocloud.dev/blob/fileblob"
 )
 
 func Serve(args []string) error {

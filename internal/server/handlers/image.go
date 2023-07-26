@@ -11,6 +11,5 @@ type ImageHandler struct {
 }
 
 func (h ImageHandler) Get(w http.ResponseWriter, r *http.Request) {
-	// id := chi.URLParam(r, "id")
 	h.Store.ServeHTTP(w, r)
 }

@@ -44,19 +44,3 @@ func (s *LocalStorage) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s LocalStorage) Backend() string {
 	return "local"
 }
-
-type localReader struct {
-	dir   string
-	fpath string
-}
-
-func (r *localReader) Read(b []byte) (int, error) {
-	return 0, nil
-}
-
-func newLocalReader(s *LocalStorage, fpath string) localReader {
-	return localReader{
-		dir:   s.dir,
-		fpath: fpath,
-	}
-}

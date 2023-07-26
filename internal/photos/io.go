@@ -11,7 +11,6 @@ import (
 	"github.com/schollz/progressbar/v3"
 	"github.com/yklcs/panchro/internal/photo"
 	"github.com/yklcs/panchro/storage"
-	_ "gocloud.dev/blob/s3blob"
 	"golang.org/x/exp/slices"
 )
 

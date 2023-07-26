@@ -13,7 +13,6 @@ import (
 	"github.com/yklcs/panchro/internal/server/handlers"
 	"github.com/yklcs/panchro/internal/utils"
 	"github.com/yklcs/panchro/storage"
-	_ "gocloud.dev/blob/fileblob"
 )
 
 type Server struct {
@@ -64,11 +63,6 @@ func NewServer(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 		r.Use(AuthPage(token, conf))
 		r.Get("/*", panchroHandler.Get)
 	})
-
-	// r.Group(func(r chi.Router) {
-	// 	r.Use(BasicAuth(token))
-	// 	r.Get("/panchro", panchroHandler.Get)
-	// })
 
 	return &Server{
 		Router: r,
