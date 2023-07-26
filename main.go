@@ -9,7 +9,7 @@ import (
 )
 
 func usage() {
-	fmt.Print(`panchro [command]
+	fmt.Print(`panchro <command>
 Usage:
 	panchro build		build panchro site
 	panchro serve		serve panchro site
@@ -39,6 +39,7 @@ func main() {
 
 	if err := run(os.Args[2:]); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
+		fmt.Fprintf(os.Stderr, `run "panchro %s -h" for help\n`, os.Args[1])
 		os.Exit(1)
 	}
 }
