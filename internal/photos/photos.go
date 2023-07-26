@@ -5,11 +5,22 @@ import (
 
 	"github.com/dgraph-io/badger/v3"
 	"github.com/yklcs/panchro/internal/photo"
-	"golang.org/x/exp/slices"
 )
 
 type Photos struct {
 	db *badger.DB
+}
+
+func (ps *Photos) MarshalJSON() ([]byte, error) {
+	var pslice []photo.Photo
+	for _, id := range ps.IDs() {
+		p, err := ps.Get(id)
+		if err != nil {
+			return nil, err
+		}
+		pslice = append(pslice, p)
+	}
+	return json.Marshal(pslice)
 }
 
 var IndexKey = []byte{0}
@@ -111,8 +122,7 @@ func (ps Photos) Get(id string) (photo.Photo, error) {
 	return p, err
 }
 
-func (ps Photos) Delete(id string) (photo.Photo, error) {
-	var p photo.Photo
+func (ps Photos) Delete(id string) error {
 	ids := []string{}
 	err := ps.db.Update(func(txn *badger.Txn) error {
 		err := txn.Delete([]byte(id))
@@ -132,8 +142,17 @@ func (ps Photos) Delete(id string) (photo.Photo, error) {
 			return err
 		}
 
-		i := slices.Index(ids, id)
-		ids = slices.Delete(ids, i, i+1)
+		// i := slices.Index(ids, id)
+		// ids = slices.Delete(ids, i, i+1)
+
+		different := 0
+		for _, i := range ids {
+			if id != i {
+				ids[different] = i
+				different++
+			}
+		}
+		ids = ids[:different]
 
 		idsb, err := json.Marshal(ids)
 		if err != nil {
@@ -143,5 +162,5 @@ func (ps Photos) Delete(id string) (photo.Photo, error) {
 
 		return err
 	})
-	return p, err
+	return err
 }

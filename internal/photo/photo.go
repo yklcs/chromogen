@@ -27,31 +27,31 @@ const (
 )
 
 type Photo struct {
-	ID string
+	ID string `json:"id"`
 
-	URL  string
-	Path string
+	URL  string `json:"url"`
+	Path string `json:"path"`
 
-	SourcePath string
+	SourcePath string `json:"-"`
 
-	Format Format
-	Hash   []byte
+	Format Format `json:"format"`
+	Hash   []byte `json:"-"`
 
-	Exif *Exif
+	Exif *Exif `json:"exif"`
 
-	PlaceholderURI template.URL
-	Width          int
-	Height         int
+	PlaceholderURI template.URL `json:"-"`
+	Width          int          `json:"width"`
+	Height         int          `json:"height"`
 
 	buffer *bytes.Buffer
 }
 
 type Exif struct {
-	DateTime     time.Time
-	MakeModel    string
-	ShutterSpeed string
-	FNumber      string
-	ISO          string
+	DateTime     time.Time `json:"datetime"`
+	MakeModel    string    `json:"makemodel"`
+	ShutterSpeed string    `json:"shutterspeed"`
+	FNumber      string    `json:"fnumber"`
+	ISO          string    `json:"iso"`
 }
 
 func NewPhoto(filepath string) (Photo, error) {

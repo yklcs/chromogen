@@ -5,6 +5,13 @@
   --fg-sub: #aaaaaa;
   --bg: #ffffff;
   --bg-sub: #eaeaea;
+
+  --bg-error: #feedee;
+  --fg-error: #3f0308;
+
+  --fg-success: #0a2003;
+  --bg-success: #cdfec2;
+  --bg-success: #e0feda;
 }
 
 /* global */
@@ -301,18 +308,24 @@ img.full {
 
 /* Form */
 
+.forms {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin: auto;
+  max-width: 30rem;
+}
+
 .form {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-width: 30rem;
-  margin: auto;
 }
 
 input {
+  outline: none;
   border: 1px solid;
   border-color: var(--bg-sub);
-  outline: none;
   font-size: 1em;
 }
 
@@ -324,7 +337,7 @@ input::file-selector-button {
   font-size: 1em;
 }
 
-input#panchro-token {
+input[type="text"] {
   border: 1px solid;
   border-color: var(--bg-sub);
   padding: 1rem;
@@ -333,4 +346,18 @@ input#panchro-token {
 button#panchro-submit {
   background-color: var(--bg-sub);
   padding: 1rem;
+}
+
+.success {
+  margin: 1rem 0;
+  background: var(--bg-success);
+  padding: 1rem;
+  color: var(--fg-success);
+}
+
+.error {
+  margin: 1rem 0;
+  background: var(--bg-error);
+  padding: 1rem;
+  color: var(--fg-error);
 }

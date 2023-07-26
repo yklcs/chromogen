@@ -53,12 +53,13 @@ func NewServer(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 	auth := Auth(token)
 	r.With(auth).Post("/photos", photosHandler.Post)
 	r.With(auth).Delete("/photos/{id}", photosHandler.Delete)
-	r.Get("/photos", photosHandler.Get)
+	r.Get("/photos", photosHandler.GetAll)
+	r.Get("/photos/{id}", photosHandler.Get)
 	r.Get(path.Join("/", conf.StaticDir, "*"), staticHandler.Get)
 	r.Get("/{id}", photoHandler.Get)
 	r.Get("/{id}.jpg", imageHandler.Get)
 	r.Get("/", indexHandler.Get)
-	// r.With(BasicAuth(token)).Get("/panchro", panchroHandler.Get)
+
 	r.Route("/panchro", func(r chi.Router) {
 		r.Use(AuthPage(token, conf))
 		r.Get("/*", panchroHandler.Get)

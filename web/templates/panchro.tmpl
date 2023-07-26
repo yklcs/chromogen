@@ -3,6 +3,12 @@
   <html lang="en">
     {{ template "head" . }}
     <body>
+      <script>
+        document.body.addEventListener("htmx:configRequest", function (evt) {
+          evt.detail.headers["Authorization"] =
+            "Bearer " + evt.detail.parameters["token"]
+        })
+      </script>
       <div class="index-layout">
         <header class="index-header">
           <h1 id="site-title">
@@ -11,24 +17,50 @@
             </a>
           </h1>
         </header>
-        <form
-          action="{{ RootResolver `/photos` }}"
-          method="post"
-          accept="image/*"
-          enctype="multipart/form-data"
-          class="form"
-        >
-        <h2>Upload</h2>
-          <input type="file" name="file" id="file" />
-          <input
-            type="text"
-            name="token"
-            id="panchro-token"
-            placeholder="Token"
-          />
-          <button id="panchro-submit">Submit</button>
-        </form>
+        <div class="forms">
+          <noscript class="error"> This page requires JavaScript </noscript>
+          <div>
+            <h2>Upload</h2>
+            <div id="upload-status"></div>
+            <form
+              id="upload"
+              action="{{ RootResolver `/photos` }}"
+              method="post"
+              enctype="multipart/form-data"
+              class="form"
+            >
+              <input type="file" name="file" id="file" accept="image/*" />
+              <input
+                type="text"
+                name="token"
+                id="panchro-token"
+                placeholder="Token"
+              />
+              <button id="panchro-submit">Submit</button>
+            </form>
+          </div>
+          <div>
+            <h2>Delete</h2>
+            <div id="delete-status"></div>
+            <form
+              id="delete"
+              action="{{ RootResolver `/photos` }}"
+              method="delete"
+              class="form"
+            >
+              <input type="text" name="id" placeholder="ID" list="id-data" />
+              <datalist id="id-data">
+                {{ range $i, $id := .Photos.IDs }}
+                  <option value="{{ $id }}">{{ $id }}</option>
+                {{ end }}
+              </datalist>
+              <input type="text" name="token" placeholder="Token" />
+              <button id="panchro-submit">Delete</button>
+            </form>
+          </div>
+        </div>
       </div>
+      <script src="{{ RootResolver .Config.StaticDir `panchro.js` }}"></script>
     </body>
   </html>
 {{ end }}

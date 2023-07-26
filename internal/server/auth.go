@@ -14,17 +14,11 @@ func Auth(key string) func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			auth := r.Header.Get("Authorization")
 
-			var token string
-			if auth == "" {
-				token = r.FormValue("token")
-			} else {
-				var ok bool
-				token, ok = strings.CutPrefix(auth, "Bearer:")
-				if !ok {
-					http.Error(w, "malformed authorization", http.StatusUnauthorized)
-					return
-				}
-				token = strings.TrimSpace(token)
+			var ok bool
+			token, ok := strings.CutPrefix(auth, "Bearer ")
+			if !ok {
+				http.Error(w, "malformed authorization", http.StatusUnauthorized)
+				return
 			}
 
 			if token == key {

@@ -8,6 +8,7 @@ Some key features:
 - EXIF metadata support
 - Themable and extendable
 - Static site generator and server modes
+- Minimal JS, progressively enhanced (used for thumbs + `/panchro` admin page only)
 
 ## Auth
 
@@ -31,6 +32,31 @@ $ panchro build images
 
 # serve (save photos and db to ./panchro, listen on :8000)
 $ panchro serve
+```
+
+## API
+
+```http
+# Get all photos as JSON
+GET /photos
+```
+
+```http
+# Get single photo as JSON
+GET /photos/{id}
+```
+
+```http
+# Delete single photo
+DELETE /photos/{id}
+Authorization: Bearer {token}
+```
+
+```http
+# Upload photo (via form data)
+POST /photos
+Content-Type multipart/form-data
+Authorization: Bearer {token}
 ```
 
 ## Theming
