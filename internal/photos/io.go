@@ -94,7 +94,13 @@ func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality
 			p.Width = w
 			p.Height = h
 
-			p.Upload(store)
+			r, _ = photo.NewReader(p)
+			purl, err := store.Upload(r, p.Path)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			p.URL = purl
+
 			p.Close()
 			ps.Set(p)
 		}()

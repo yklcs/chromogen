@@ -15,7 +15,6 @@ import (
 
 	"github.com/rwcarlsen/goexif/exif"
 	"github.com/yklcs/panchro/internal/utils"
-	"github.com/yklcs/panchro/storage"
 )
 
 type Format string
@@ -126,11 +125,4 @@ func (p *Photo) ProcessMeta() error {
 
 	wg.Wait()
 	return nil
-}
-
-func (p *Photo) Upload(store storage.Storage) error {
-	r, _ := NewReader(*p)
-	purl, err := store.Upload(r, p.Path)
-	p.URL = purl
-	return err
 }

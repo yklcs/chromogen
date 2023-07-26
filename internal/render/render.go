@@ -26,7 +26,9 @@ func IndexPhoto(img photo.Photo, index int) IndexedPhoto {
 
 func NewRootResolver(conf *config.Config) func(p ...string) string {
 	return func(p ...string) string {
-		p = append([]string{"/", conf.Root}, p...)
+		if !strings.HasPrefix(p[0], "https://") {
+			p = append([]string{"/", conf.Root}, p...)
+		}
 		return path.Join(p...)
 	}
 }

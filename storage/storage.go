@@ -14,6 +14,7 @@ const (
 
 type Storage interface {
 	Upload(r io.Reader, fpath string) (string, error)
+	Delete(fpath string) error
 	ServeHTTP(w http.ResponseWriter, r *http.Request)
 	Backend() string
 }

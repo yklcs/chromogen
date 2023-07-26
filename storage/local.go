@@ -36,6 +36,12 @@ func (s *LocalStorage) Upload(r io.Reader, fpath string) (string, error) {
 	return fpath, err
 }
 
+func (s *LocalStorage) Delete(fpath string) error {
+	fpathjoined := path.Join(s.dir, fpath)
+	err := os.Remove(fpathjoined)
+	return err
+}
+
 func (s *LocalStorage) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	filepath := path.Join(s.dir, r.URL.Path)
 	http.ServeFile(w, r, filepath)

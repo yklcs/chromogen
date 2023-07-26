@@ -33,10 +33,25 @@ func (h PhotosHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 func (h PhotosHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	err := h.Photos.Delete(id)
+
+	p, err := h.Photos.Get(id)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "could not find photo", http.StatusNotFound)
+		return
+	}
+
+	err = h.Store.Delete(p.Path)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "could not delete file", http.StatusInternalServerError)
+		return
+	}
+
+	err = h.Photos.Delete(id)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "could not delete photo", http.StatusInternalServerError)
 		return
 	}
 }
@@ -51,12 +66,21 @@ func (h PhotosHandler) Post(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	p, _ := photo.NewPhoto(handler.Filename)
 	p.Open()
+	defer p.Close()
+
 	p.ReadFrom(file)
 	p.ProcessMeta()
 	p.ResizeAndCompress(2048, 75)
-	p.Upload(h.Store)
+
+	file.Seek(0, 0)
+	purl, err := h.Store.Upload(file, p.Path)
+	if err != nil {
+		http.Error(w, "could not upload file", http.StatusInternalServerError)
+		return
+	}
+	p.URL = purl
+
 	h.Photos.Add(p)
-	// w.WriteHeader(http.StatusNoContent)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(p)
 }

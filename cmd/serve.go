@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path"
+	"strings"
 	"syscall"
 
 	"github.com/dgraph-io/badger/v3"
@@ -19,8 +19,10 @@ import (
 
 func Serve(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
-	storename := flags.String("s", "panchro", "storage folder path")
-	confPath := flags.String("c", "panchro.json", "configuration json file path")
+	storepath := flags.String("s", "panchro", "photo storage folder/bucket path, use s3://... for S3")
+	s3url := flags.String("s3url", "", "S3 URL root, use if S3 is behind CDN")
+	dbpath := flags.String("db", "panchro.db", "db path")
+	confpath := flags.String("c", "panchro.json", "configuration json file path")
 	port := flags.String("p", "8000", "port")
 
 	flags.Usage = func() {
@@ -41,21 +43,27 @@ func Serve(args []string) error {
 		return errors.New("wrong number of arguments")
 	}
 
-	conf, err := config.ReadConfig(*confPath)
+	conf, err := config.ReadConfig(*confpath)
 	if err != nil {
 		return err
 	}
 
-	dbPath := path.Join(*storename, "panchro.db")
 	db, err := badger.Open(
-		badger.DefaultOptions(dbPath).WithLoggingLevel(badger.WARNING),
+		badger.DefaultOptions(*dbpath).WithLoggingLevel(badger.WARNING),
 	)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	store, err := storage.NewLocalStorage(*storename)
+	var store storage.Storage
+	if strings.HasPrefix(*storepath, "s3://") {
+		s3path, _ := strings.CutPrefix(*storepath, "s3://")
+		bucket, prefix, _ := strings.Cut(s3path, "/")
+		store, err = storage.NewS3Storage(bucket, prefix, *s3url)
+	} else {
+		store, err = storage.NewLocalStorage(*storepath)
+	}
 	if err != nil {
 		return err
 	}

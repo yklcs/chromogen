@@ -3,3 +3,4 @@ test/
 dist/
 node_modules/
 panchro/
+panchro.db/

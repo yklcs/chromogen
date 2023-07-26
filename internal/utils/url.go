@@ -1,29 +1,5 @@
 package utils
 
-import (
-	"net/url"
-	"path/filepath"
-)
-
-func CanonicalizeURL(urlstr string) (string, error) {
-	parsed, err := url.Parse(urlstr)
-	if err != nil {
-		return "", err
-	}
-
-	if parsed.Scheme == "" {
-		path, err := filepath.Abs(parsed.Path)
-		if err != nil {
-			return "", err
-		}
-
-		parsed.Scheme = "file"
-		parsed.Path = path
-	}
-
-	return parsed.String(), nil
-}
-
 func Base58Encode(src []byte) string {
 	alphabet := []rune("123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz")
 

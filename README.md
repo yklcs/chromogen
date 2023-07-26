@@ -31,11 +31,14 @@ $ panchro build images
 # build static site (input from ./images, output to ./out, read config from config.json)
 $ panchro build -o out -c config.json images
 
-# start server (save photos and db to ./panchro, listen on :8000)
+# start server (save photos to ./panchro, save DB to ./panchro.db, listen on :8000)
 $ panchro serve
 
-# start server (save photos and db to ./store, listen on :1234)
+# start server (save photos to ./store, listen on :1234)
 $ panchro -s store -p 1234 serve
+
+# start server (save photos to s3://photos using default AWS config)
+$ panchro -s s3://photos serve
 ```
 
 ### Auth
