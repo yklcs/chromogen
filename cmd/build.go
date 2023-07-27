@@ -8,10 +8,10 @@ import (
 	"os"
 	"path"
 
-	"github.com/dgraph-io/badger/v3"
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/render"
+	bolt "go.etcd.io/bbolt"
 )
 
 func Build(args []string) error {
@@ -49,12 +49,16 @@ func Build(args []string) error {
 		return err
 	}
 
-	db, err := badger.Open(badger.DefaultOptions("").WithInMemory(true).WithLoggingLevel(badger.ERROR))
+	dbpath := path.Join(*out, "tmp.db")
+	db, err := bolt.Open(dbpath, 0600, nil)
 	if err != nil {
 		return err
 	}
+	defer db.Close()
+	defer os.RemoveAll(dbpath)
 
-	ps := photos.NewPhotos(db)
+	ps := &photos.Photos{DB: db}
+	ps.Init()
 	err = ps.ProcessFS(in, *out, true, 2048, 75)
 	if err != nil {
 		return err
@@ -66,7 +70,7 @@ func Build(args []string) error {
 	}
 	defer indexHTML.Close()
 
-	err = render.RenderIndex(indexHTML, &ps, conf)
+	err = render.RenderIndex(indexHTML, ps, conf)
 	if err != nil {
 		return err
 	}

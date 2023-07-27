@@ -2,13 +2,14 @@ package photos
 
 import (
 	"encoding/json"
+	"errors"
 
-	"github.com/dgraph-io/badger/v3"
 	"github.com/yklcs/panchro/internal/photo"
+	bolt "go.etcd.io/bbolt"
 )
 
 type Photos struct {
-	db *badger.DB
+	DB *bolt.DB
 }
 
 func (ps *Photos) MarshalJSON() ([]byte, error) {
@@ -23,80 +24,59 @@ func (ps *Photos) MarshalJSON() ([]byte, error) {
 	return json.Marshal(pslice)
 }
 
-var IndexKey = []byte{0}
+var IndexKey = []byte("index")
+var PhotosKey = []byte("photos")
 
-func NewPhotos(db *badger.DB) Photos {
-	db.Update(func(txn *badger.Txn) error {
-		mapb, err := json.Marshal([]string{})
+func (ps *Photos) Init() error {
+	err := ps.DB.Update(func(tx *bolt.Tx) error {
+		tx.CreateBucketIfNotExists(IndexKey)
+		tx.CreateBucketIfNotExists(PhotosKey)
+		return nil
+	})
+	return err
+}
+
+func (ps Photos) Add(p photo.Photo) {
+	ps.DB.Update(func(tx *bolt.Tx) error {
+		// Add p.ID to index
+		indexBucket := tx.Bucket(IndexKey)
+		id, _ := indexBucket.NextSequence()
+		indexBucket.Put(uint64ToByteSlice(id), []byte(p.ID))
+
+		// Add p
+		pb, err := json.Marshal(p)
 		if err != nil {
 			return err
 		}
-		if _, err := txn.Get(IndexKey); err == badger.ErrKeyNotFound {
-			txn.Set(IndexKey, mapb)
-		}
+		photosBucket := tx.Bucket(PhotosKey)
+		photosBucket.Put([]byte(p.ID), pb)
 
 		return nil
 	})
-
-	return Photos{
-		db: db,
-	}
 }
 
-func (ps Photos) Add(val photo.Photo) {
-	var ids []string
-	ps.db.Update(func(txn *badger.Txn) error {
-		valb, err := json.Marshal(val)
+func (ps Photos) Set(p photo.Photo) {
+	ps.DB.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(PhotosKey)
+		pb, err := json.Marshal(p)
 		if err != nil {
 			return err
 		}
-		txn.Set([]byte(val.ID), valb)
-
-		idsitem, err := txn.Get(IndexKey)
-		if err != nil {
-			return err
-		}
-		err = idsitem.Value(func(val []byte) error {
-			err := json.Unmarshal(val, &ids)
-			return err
-		})
-		if err != nil {
-			return err
-		}
-
-		idsb, err := json.Marshal(append([]string{val.ID}, ids...))
-		if err != nil {
-			return err
-		}
-
-		err = txn.Set(IndexKey, idsb)
-		return err
-	})
-}
-
-func (ps Photos) Set(val photo.Photo) {
-	ps.db.Update(func(txn *badger.Txn) error {
-		valb, err := json.Marshal(val)
-		if err != nil {
-			return err
-		}
-		err = txn.Set([]byte(val.ID), valb)
-		return err
+		b.Put([]byte(p.ID), pb)
+		return nil
 	})
 }
 
 func (ps Photos) IDs() []string {
 	ids := []string{}
-	ps.db.View(func(txn *badger.Txn) error {
-		idsitem, err := txn.Get(IndexKey)
-		if err != nil {
-			return err
-		}
-		err = idsitem.Value(func(val []byte) error {
-			err := json.Unmarshal(val, &ids)
-			return err
+
+	ps.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(IndexKey)
+		b.ForEach(func(k, v []byte) error {
+			ids = append(ids, string(v))
+			return nil
 		})
-		return err
+		return nil
 	})
 
 	return ids
@@ -108,56 +88,52 @@ func (ps Photos) Len() int {
 
 func (ps Photos) Get(id string) (photo.Photo, error) {
 	var p photo.Photo
-	err := ps.db.Update(func(txn *badger.Txn) error {
-		item, err := txn.Get([]byte(id))
-		if err != nil {
-			return err
+	err := ps.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(PhotosKey)
+		pb := b.Get([]byte(id))
+		if pb == nil {
+			return errors.New("photo does not exist")
 		}
-		err = item.Value(func(val []byte) error {
-			err := json.Unmarshal(val, &p)
-			return err
-		})
+		err := json.Unmarshal(pb, &p)
 		return err
 	})
+
 	return p, err
 }
 
 func (ps Photos) Delete(id string) error {
-	ids := []string{}
-	err := ps.db.Update(func(txn *badger.Txn) error {
-		err := txn.Delete([]byte(id))
+	err := ps.DB.Update(func(tx *bolt.Tx) error {
+		// Delete from photos
+		photosBucket := tx.Bucket(PhotosKey)
+		err := photosBucket.Delete([]byte(id))
 		if err != nil {
 			return err
 		}
 
-		idsitem, err := txn.Get(IndexKey)
-		if err != nil {
-			return err
-		}
-		err = idsitem.Value(func(val []byte) error {
-			err := json.Unmarshal(val, &ids)
-			return err
-		})
-		if err != nil {
-			return err
-		}
-
-		different := 0
-		for _, i := range ids {
-			if id != i {
-				ids[different] = i
-				different++
+		// Delete from index
+		indexBucket := tx.Bucket(IndexKey)
+		c := indexBucket.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			if id == string(v) {
+				indexBucket.Delete(k)
 			}
 		}
-		ids = ids[:different]
 
-		idsb, err := json.Marshal(ids)
-		if err != nil {
-			return err
-		}
-		err = txn.Set(IndexKey, idsb)
-
-		return err
+		return nil
 	})
+
 	return err
+}
+
+func uint64ToByteSlice(u uint64) []byte {
+	return []byte{
+		byte(0xff & u),
+		byte(0xff & (u >> 8)),
+		byte(0xff & (u >> 16)),
+		byte(0xff & (u >> 24)),
+		byte(0xff & (u >> 32)),
+		byte(0xff & (u >> 40)),
+		byte(0xff & (u >> 48)),
+		byte(0xff & (u >> 56)),
+	}
 }

@@ -28,6 +28,10 @@ const (
 type Photo struct {
 	ID string `json:"id"`
 
+	Title       string
+	Description string
+	Tags        []string
+
 	URL  string `json:"url"`
 	Path string `json:"path"`
 

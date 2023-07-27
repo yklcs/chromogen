@@ -10,11 +10,11 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/dgraph-io/badger/v3"
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/server"
 	"github.com/yklcs/panchro/storage"
+	bolt "go.etcd.io/bbolt"
 )
 
 func Serve(args []string) error {
@@ -48,9 +48,7 @@ func Serve(args []string) error {
 		return err
 	}
 
-	db, err := badger.Open(
-		badger.DefaultOptions(*dbpath).WithLoggingLevel(badger.WARNING),
-	)
+	db, err := bolt.Open(*dbpath, 0600, nil)
 	if err != nil {
 		return err
 	}
@@ -67,7 +65,8 @@ func Serve(args []string) error {
 	if err != nil {
 		return err
 	}
-	ps := photos.NewPhotos(db)
+	ps := photos.Photos{DB: db}
+	ps.Init()
 	srv, _ := server.NewServer(&ps, store, conf)
 
 	c := make(chan os.Signal, 1)
