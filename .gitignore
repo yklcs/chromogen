@@ -2,5 +2,6 @@
 test/
 dist/
 node_modules/
-panchro/
-panchro.db/
+/panchro/
+panchro.db
+*.local.*

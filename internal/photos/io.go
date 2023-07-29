@@ -43,7 +43,11 @@ func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality
 		return err
 	}
 
-	bar := progressbar.Default(int64(len(fpaths)), "read")
+	for i, j := 0, len(fpaths)-1; i < j; i, j = i+1, j-1 {
+		fpaths[i], fpaths[j] = fpaths[j], fpaths[i]
+	}
+
+	bar := progressbar.Default(int64(len(fpaths)), "process")
 
 	var wg sync.WaitGroup
 	wg.Add(len(fpaths))

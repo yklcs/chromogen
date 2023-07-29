@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
-	"github.com/yklcs/panchro/cmd"
 )
 
 func usage() {
@@ -26,9 +24,9 @@ func main() {
 	var run func([]string) error
 	switch strings.ToLower(os.Args[1]) {
 	case "build":
-		run = cmd.Build
+		run = build
 	case "serve":
-		run = cmd.Serve
+		run = serve
 	case "help":
 		usage()
 		os.Exit(0)

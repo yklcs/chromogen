@@ -38,11 +38,11 @@ type Photo struct {
 	SourcePath string `json:"-"`
 
 	Format Format `json:"format"`
-	Hash   []byte `json:"-"`
+	Hash   []byte `json:"hash"`
 
 	Exif *Exif `json:"exif"`
 
-	PlaceholderURI template.URL `json:"-"`
+	PlaceholderURI template.URL `json:"placeholder_uri"`
 	Width          int          `json:"width"`
 	Height         int          `json:"height"`
 

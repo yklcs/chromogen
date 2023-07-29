@@ -1,4 +1,4 @@
-package cmd
+package main
 
 import (
 	"errors"
@@ -17,7 +17,7 @@ import (
 	bolt "go.etcd.io/bbolt"
 )
 
-func Serve(args []string) error {
+func serve(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
 	storepath := flags.String("s", "panchro", "photo storage path, use s3://... for S3")
 	s3url := flags.String("s3url", "", "S3 URL root, use if S3 is behind CDN")
