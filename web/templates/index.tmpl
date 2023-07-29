@@ -27,8 +27,8 @@
               <span> {{ .Photos.Len }} photos </span>
               {{ if .Config.ThemeConfig.links }}
                 <span>·</span>
-                {{ range $name, $href := .Config.ThemeConfig.links }}
-                  <a href="{{ $href }}" class="pill">{{ $name }}↗</a>
+                {{ range $link := .Config.ThemeConfig.links }}
+                  <a href="{{ $link.href }}" class="pill">{{ $link.name }}↗</a>
                 {{ end }}
               {{ end }}
             </div>
