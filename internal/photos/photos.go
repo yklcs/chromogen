@@ -79,6 +79,10 @@ func (ps Photos) IDs() []string {
 		return nil
 	})
 
+	for i, j := 0, len(ids)-1; i < j; i, j = i+1, j-1 {
+		ids[i], ids[j] = ids[j], ids[i]
+	}
+
 	return ids
 }
 

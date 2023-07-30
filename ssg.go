@@ -12,10 +12,10 @@ import (
 )
 
 type StaticSiteGenerator struct {
-	in     string
-	out    string
-	conf   *config.Config
-	photos *photos.Photos
+	inpath  string
+	outpath string
+	conf    *config.Config
+	photos  *photos.Photos
 }
 
 func NewStaticSiteGenerator(inpath, outpath, confpath string) (*StaticSiteGenerator, error) {
@@ -36,10 +36,10 @@ func NewStaticSiteGenerator(inpath, outpath, confpath string) (*StaticSiteGenera
 	}
 
 	return &StaticSiteGenerator{
-		in:     inpath,
-		out:    outpath,
-		conf:   conf,
-		photos: &photos.Photos{DB: db},
+		inpath:  inpath,
+		outpath: outpath,
+		conf:    conf,
+		photos:  &photos.Photos{DB: db},
 	}, nil
 }
 
@@ -48,12 +48,12 @@ func (s *StaticSiteGenerator) Build() error {
 	defer os.RemoveAll(s.photos.DB.Path())
 	s.photos.Init()
 
-	err := s.photos.ProcessFS(s.in, s.out, true, 2048, 75)
+	err := s.photos.ProcessFS(s.inpath, s.outpath, true, 2048, 75)
 	if err != nil {
 		return err
 	}
 
-	indexHTML, err := os.Create(path.Join(s.out, "index.html"))
+	indexHTML, err := os.Create(path.Join(s.outpath, "index.html"))
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (s *StaticSiteGenerator) Build() error {
 
 	themeFS := config.LoadTheme(s.conf)
 	staticFS, _ := fs.Sub(themeFS, "static")
-	staticDir := path.Join(s.out, s.conf.StaticDir)
+	staticDir := path.Join(s.outpath, s.conf.StaticDir)
 	err = os.MkdirAll(staticDir, 0755)
 	if err != nil {
 		return err
@@ -77,7 +77,7 @@ func (s *StaticSiteGenerator) Build() error {
 	}
 
 	for _, id := range s.photos.IDs() {
-		dir := path.Join(s.out, id)
+		dir := path.Join(s.outpath, id)
 		err := os.MkdirAll(dir, 0755)
 		if err != nil {
 			return err

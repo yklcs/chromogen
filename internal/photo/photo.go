@@ -50,11 +50,14 @@ type Photo struct {
 }
 
 type Exif struct {
-	DateTime     time.Time `json:"datetime"`
-	MakeModel    string    `json:"makemodel"`
-	ShutterSpeed string    `json:"shutterspeed"`
-	FNumber      string    `json:"fnumber"`
-	ISO          string    `json:"iso"`
+	DateTime        time.Time `json:"datetime"`
+	MakeModel       string    `json:"makemodel"`
+	ShutterSpeed    string    `json:"shutterspeed"`
+	FNumber         string    `json:"fnumber"`
+	ISO             string    `json:"iso"`
+	LensMakeModel   string    `json:"lens_makemodel"`
+	FocalLength     string    `json:"focallength"`
+	SubjectDistance string    `json:"subjectdistance"`
 }
 
 func NewPhoto(filepath string) (Photo, error) {

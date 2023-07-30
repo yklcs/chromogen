@@ -13,9 +13,9 @@ import (
 func processExif(x *exif.Exif) *Exif {
 	ex := Exif{}
 
-	mkTag, _ := x.Get(exif.Make)
-	if mkTag != nil {
-		ex.MakeModel, _ = mkTag.StringVal()
+	makeTag, _ := x.Get(exif.Make)
+	if makeTag != nil {
+		ex.MakeModel, _ = makeTag.StringVal()
 	}
 
 	modelTag, _ := x.Get(exif.Model)
@@ -42,7 +42,7 @@ func processExif(x *exif.Exif) *Exif {
 	fTag, _ := x.Get(exif.FNumber)
 	if fTag != nil {
 		fRat, _ := fTag.Rat(0)
-		ex.FNumber = "ƒ/"
+		ex.FNumber = "ƒ"
 		if fRat.IsInt() {
 			ex.FNumber += fRat.RatString()
 		} else {
@@ -55,6 +55,24 @@ func processExif(x *exif.Exif) *Exif {
 	if isoTag != nil {
 		iso, _ := isoTag.Int64(0)
 		ex.ISO = "ISO " + fmt.Sprint(iso)
+	}
+
+	lensMakeTag, _ := x.Get(exif.LensMake)
+	if lensMakeTag != nil {
+		ex.LensMakeModel, _ = lensMakeTag.StringVal()
+	}
+
+	lensModelTag, _ := x.Get(exif.LensModel)
+	if lensModelTag != nil {
+		lensModel, _ := lensModelTag.StringVal()
+		ex.LensMakeModel += " " + lensModel
+	}
+
+	focalLengthTag, _ := x.Get(exif.FocalLength)
+	if focalLengthTag != nil {
+		focalLength, _ := focalLengthTag.Rat(0)
+		focalLengthFloat, _ := focalLength.Float64()
+		ex.FocalLength = fmt.Sprintf("%dmm", int(focalLengthFloat))
 	}
 
 	return &ex

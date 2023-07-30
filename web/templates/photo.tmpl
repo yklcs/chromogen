@@ -6,23 +6,41 @@
       <div>
         <a href="{{ RootResolver `/` }}" class="back">
           <span class="backlogo">↩</span>
-          {{ .Config.Title }}
         </a>
       </div>
       <div class="image-layout">
         <div class="image-sidebar">
           <div class="image-meta">
-            <span>{{ .Photo.Exif.MakeModel }}</span>
-            <div class="exposure-settings">
-              <span>{{ .Photo.Exif.FNumber }}</span>
-              <span>{{ .Photo.Exif.ShutterSpeed }}</span>
-              <span>{{ .Photo.Exif.ISO }}</span>
-            </div>
             {{ if not .Photo.Exif.DateTime.IsZero }}
               <time datetime="{{ .Photo.Exif.DateTime }}"
                 >{{ .Photo.Exif.DateTime.Format "Jan 2, 2006" }}</time
               >
             {{ end }}
+            <div class="image-meta-exif">
+              <div class="exif-makemodel">
+                {{ .Photo.Exif.MakeModel }}
+              </div>
+              {{ if .Photo.Exif.LensMakeModel }}
+              <div class="exif-lens">
+                {{ .Photo.Exif.LensMakeModel }}
+              </div>
+              {{end}}
+              <div class="exif-exposure">
+                <span>{{ .Photo.Exif.ISO }}</span>
+                <!-- <span class="separator"></span> -->
+                <span>{{ .Photo.Exif.FocalLength }}</span>
+                <span>{{ .Photo.Exif.FNumber }}</span>
+                <span>{{ .Photo.Exif.ShutterSpeed }}</span>
+                <!-- <span>{{ .Photo.Exif.SubjectDistance }}</span> -->
+                <!-- <span class="separator"></span> -->
+              </div>
+            </div>
+            <a class="footlink" href="{{ RootResolver `/` }}">
+              {{ .Config.Title }}
+            </a>
+            <!-- <p> -->
+              <!-- Powered by <a href="https://github.com/yklcs/panchro">Panchro</a> -->
+            <!-- </p> -->
           </div>
         </div>
         <div class="image-wrapper">
