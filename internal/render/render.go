@@ -12,18 +12,6 @@ import (
 	"github.com/yklcs/panchro/internal/photos"
 )
 
-type IndexedPhoto struct {
-	photo.Photo
-	Index int
-}
-
-func IndexPhoto(img photo.Photo, index int) IndexedPhoto {
-	return IndexedPhoto{
-		Photo: img,
-		Index: index,
-	}
-}
-
 func NewRootResolver(conf *config.Config) func(p ...string) string {
 	return func(p ...string) string {
 		if !strings.HasPrefix(p[0], "https://") {
@@ -41,6 +29,18 @@ func RenderIndex(w io.Writer, ps *photos.Photos, conf *config.Config) error {
 	type IndexTemplateData struct {
 		Photos *photos.Photos
 		*config.Config
+	}
+
+	type IndexedPhoto struct {
+		photo.Photo
+		Index int
+	}
+
+	IndexPhoto := func(img photo.Photo, index int) IndexedPhoto {
+		return IndexedPhoto{
+			Photo: img,
+			Index: index,
+		}
 	}
 
 	theme := config.LoadTheme(conf)

@@ -3,16 +3,10 @@
   <html lang="en">
     {{ template "head" . }}
     <body>
-      <script>
-        document.body.addEventListener("htmx:configRequest", function (evt) {
-          evt.detail.headers["Authorization"] =
-            "Bearer " + evt.detail.parameters["token"]
-        })
-      </script>
       <div class="index-layout">
         <header class="index-header">
           <h1 id="site-title">
-            <a href="/">
+            <a href="{{ RootResolver `/` }}">
               {{ .Config.Title }}
             </a>
           </h1>

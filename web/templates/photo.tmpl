@@ -21,26 +21,23 @@
                 {{ .Photo.Exif.MakeModel }}
               </div>
               {{ if .Photo.Exif.LensMakeModel }}
-              <div class="exif-lens">
-                {{ .Photo.Exif.LensMakeModel }}
-              </div>
-              {{end}}
+                <div class="exif-lens">
+                  {{ .Photo.Exif.LensMakeModel }}
+                </div>
+              {{ end }}
               <div class="exif-exposure">
                 <span>{{ .Photo.Exif.ISO }}</span>
-                <!-- <span class="separator"></span> -->
+                <span class="separator"></span>
                 <span>{{ .Photo.Exif.FocalLength }}</span>
+                <span class="separator"></span>
                 <span>{{ .Photo.Exif.FNumber }}</span>
+                <span class="separator"></span>
                 <span>{{ .Photo.Exif.ShutterSpeed }}</span>
-                <!-- <span>{{ .Photo.Exif.SubjectDistance }}</span> -->
-                <!-- <span class="separator"></span> -->
               </div>
             </div>
             <a class="footlink" href="{{ RootResolver `/` }}">
               {{ .Config.Title }}
             </a>
-            <!-- <p> -->
-              <!-- Powered by <a href="https://github.com/yklcs/panchro">Panchro</a> -->
-            <!-- </p> -->
           </div>
         </div>
         <div class="image-wrapper">

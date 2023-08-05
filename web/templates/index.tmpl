@@ -7,17 +7,19 @@
         src="{{ RootResolver .Config.StaticDir `index.js` }}"
         defer
       ></script>
-      <div class="index-layout">
-        <header class="index-header">
+      <header class="index-header">
+        <div class="index-header-content">
           <h1 id="site-title">
-            <a href="/">
+            <a href="{{ RootResolver `/` }}">
               {{ .Config.Title }}
             </a>
           </h1>
           <button id="viewmode-toggler" class="noscript">
             {{- .Config.DefaultViewMode -}}
           </button>
-        </header>
+        </div>
+      </header>
+      <div class="index-layout">
         <div id="info">
           {{ if .Config.ThemeConfig.bio }}
             <p class="bio">
