@@ -14,9 +14,8 @@ type Photos struct {
 
 func (ps *Photos) Init() error {
 	_, err := ps.DB.Exec(`
-		CREATE TABLE photos(
-			rowid INTEGER PRIMARY KEY,
-			id TEXT,
+		CREATE TABLE IF NOT EXISTS photos(
+			id TEXT PRIMARY KEY,
 			url TEXT,
 			path TEXT,
 			source_path TEXT,
@@ -42,7 +41,7 @@ func (ps *Photos) Init() error {
 
 func (ps Photos) Add(p photo.Photo) {
 	_, err := ps.DB.Exec(`
-		INSERT INTO photos
+		INSERT OR REPLACE INTO photos
 		(
 			id,
 			url,
@@ -102,10 +101,6 @@ func (ps Photos) IDs() []string {
 		ids = append(ids, id)
 	}
 
-	for i, j := 0, len(ids)-1; i < j; i, j = i+1, j-1 {
-		ids[i], ids[j] = ids[j], ids[i]
-	}
-
 	return ids
 }
 
@@ -118,25 +113,7 @@ func (ps Photos) Get(id string) (photo.Photo, error) {
 	p.Exif = &photo.Exif{}
 
 	row := ps.DB.QueryRow(`
-	SELECT 
-		id,
-		url,
-		path,
-		source_path,
-		format,
-		hash,
-		placeholder_uri,
-		width, 
-		height,
-		exif_datetime,
-		exif_makemodel,
-		exif_shutterspeed,
-		exif_fnumber,
-		exif_iso,
-		exif_lensmakemodel,
-		exif_focallength,
-		exif_subjectdistance
-	FROM photos
+	SELECT * FROM photos
 	WHERE id = ?;`, id)
 	err := row.Scan(
 		&p.ID,

@@ -67,43 +67,34 @@ func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality
 		p.Open()
 		p.ReadFrom(fin)
 
-		metaDone := make(chan bool, 1)
-		func() {
-			err = p.ProcessMeta()
-			if err != nil {
-				log.Fatalln(err)
-			}
-			ps.Add(p)
-			metaDone <- true
-		}()
+		err = p.ProcessMeta()
+		if err != nil {
+			log.Fatalln(err)
+		}
 
-		go func() {
-			defer wg.Done()
-			defer bar.Add(1)
+		w, h := p.Width, p.Height
+		var outbuf bytes.Buffer
+		r, _ := photo.NewReader(p)
+		if compress {
+			w, h, _ = p.ResizeAndCompress(longSideSize, quality)
+		} else {
+			photo.ToJPEG(r, &outbuf, quality)
+		}
+		p.Width = w
+		p.Height = h
 
-			w, h := p.Width, p.Height
-			var outbuf bytes.Buffer
-			r, _ := photo.NewReader(p)
-			if compress {
-				p.ResizeAndCompress(longSideSize, quality)
-			} else {
-				photo.ToJPEG(r, &outbuf, quality)
-			}
-			<-metaDone
+		r, _ = photo.NewReader(p)
+		purl, err := store.Upload(r, p.Path)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		p.URL = purl
 
-			p.Width = w
-			p.Height = h
+		p.Close()
+		ps.Add(p)
 
-			r, _ = photo.NewReader(p)
-			purl, err := store.Upload(r, p.Path)
-			if err != nil {
-				log.Fatalln(err)
-			}
-			p.URL = purl
-
-			p.Close()
-			ps.Add(p)
-		}()
+		wg.Done()
+		bar.Add(1)
 	}
 
 	wg.Wait()

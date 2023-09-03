@@ -45,9 +45,12 @@ func NewStaticSiteGenerator(inpath, outpath, confpath string) (*StaticSiteGenera
 
 func (s *StaticSiteGenerator) Build() error {
 	defer s.photos.DB.Close()
-	s.photos.Init()
+	err := s.photos.Init()
+	if err != nil {
+		return err
+	}
 
-	err := s.photos.ProcessFS(s.inpath, s.outpath, true, 2048, 75)
+	err = s.photos.ProcessFS(s.inpath, s.outpath, true, 2048, 75)
 	if err != nil {
 		return err
 	}
