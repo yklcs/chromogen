@@ -2,7 +2,10 @@ package photos
 
 import (
 	"database/sql"
+	"errors"
+	"io/fs"
 	"log"
+	"os"
 
 	"github.com/yklcs/panchro/internal/photo"
 	_ "modernc.org/sqlite"
@@ -10,6 +13,18 @@ import (
 
 type Photos struct {
 	DB *sql.DB
+}
+
+func (ps *Photos) Load(dbpath string) (bool, error) {
+	if _, err := os.Stat(dbpath); errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	db, err := sql.Open("sqlite", dbpath)
+	if err != nil {
+		return false, err
+	}
+	ps.DB = db
+	return true, nil
 }
 
 func (ps *Photos) Init() error {
@@ -92,7 +107,7 @@ func (ps Photos) IDs() []string {
 	var ids []string
 
 	rows, _ := ps.DB.Query(
-		`SELECT id FROM photos;`,
+		`SELECT id FROM photos ORDER BY ROWID DESC;`,
 	)
 
 	for rows.Next() {

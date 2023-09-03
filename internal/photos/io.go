@@ -2,14 +2,18 @@ package photos
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"io"
 	"io/fs"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"sync"
 
 	"github.com/schollz/progressbar/v3"
 	"github.com/yklcs/panchro/internal/photo"
+	"github.com/yklcs/panchro/internal/utils"
 	"github.com/yklcs/panchro/storage"
 	"golang.org/x/exp/slices"
 )
@@ -33,6 +37,9 @@ func MatchExts(dir string, exts []string) ([]string, error) {
 
 // ProcessFS reads and processes photo data from the filesystem
 func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality int) error {
+	oldps := &Photos{}
+	oldpsExists, err := oldps.Load(path.Join(out, "panchro.db"))
+
 	store, err := storage.NewLocalStorage(out)
 	if err != nil {
 		return err
@@ -42,6 +49,7 @@ func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality
 	if err != nil {
 		return err
 	}
+	slices.Sort(fpaths)
 
 	bar := progressbar.Default(int64(len(fpaths)), "process")
 
@@ -58,6 +66,22 @@ func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality
 		relpath, err := filepath.Rel(in, fpath)
 		if err != nil {
 			return err
+		}
+
+		hash := sha256.New()
+		io.Copy(hash, fin)
+		phash := hash.Sum(nil)
+		pid := utils.Base58Encode(phash)[:6]
+		fin.Seek(0, 0)
+
+		if oldpsExists {
+			if oldp, err := oldps.Get(pid); err == nil {
+				// photo already exists in db, use that
+				ps.Add(oldp)
+				wg.Done()
+				bar.Add(1)
+				continue
+			}
 		}
 
 		p, err := photo.NewPhoto(relpath)
