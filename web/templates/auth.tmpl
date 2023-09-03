@@ -3,14 +3,14 @@
   <html lang="en">
     {{ template "head" . }}
     <body>
+      <header class="index-header">
+        <h1 id="site-title">
+          <a href="/">
+            {{ .Config.Title }}
+          </a>
+        </h1>
+      </header>
       <div class="index-layout">
-        <header class="index-header">
-          <h1 id="site-title">
-            <a href="/">
-              {{ .Config.Title }}
-            </a>
-          </h1>
-        </header>
         <div class="forms">
           <div>
             <h2>Log in</h2>
