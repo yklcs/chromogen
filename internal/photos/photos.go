@@ -1,83 +1,106 @@
 package photos
 
 import (
-	"encoding/json"
-	"errors"
+	"database/sql"
+	"log"
 
 	"github.com/yklcs/panchro/internal/photo"
-	bolt "go.etcd.io/bbolt"
+	_ "modernc.org/sqlite"
 )
 
 type Photos struct {
-	DB *bolt.DB
+	DB *sql.DB
 }
-
-func (ps *Photos) MarshalJSON() ([]byte, error) {
-	var pslice []photo.Photo
-	for _, id := range ps.IDs() {
-		p, err := ps.Get(id)
-		if err != nil {
-			return nil, err
-		}
-		pslice = append(pslice, p)
-	}
-	return json.Marshal(pslice)
-}
-
-var IndexKey = []byte("index")
-var PhotosKey = []byte("photos")
 
 func (ps *Photos) Init() error {
-	err := ps.DB.Update(func(tx *bolt.Tx) error {
-		tx.CreateBucketIfNotExists(IndexKey)
-		tx.CreateBucketIfNotExists(PhotosKey)
-		return nil
-	})
+	_, err := ps.DB.Exec(`
+		CREATE TABLE photos(
+			rowid INTEGER PRIMARY KEY,
+			id TEXT,
+			url TEXT,
+			path TEXT,
+			source_path TEXT,
+			format TEXT,
+			hash BLOB,
+			placeholder_uri TEXT,
+			width INTEGER,
+			height INTEGER,
+			
+			exif_datetime DATETIME,
+			exif_makemodel TEXT,
+			exif_shutterspeed TEXT,
+			exif_fnumber TEXT,
+			exif_iso TEXT,
+			exif_lensmakemodel TEXT,
+			exif_focallength TEXT,
+			exif_subjectdistance TEXT
+		);
+	`)
+
 	return err
 }
 
 func (ps Photos) Add(p photo.Photo) {
-	ps.DB.Update(func(tx *bolt.Tx) error {
-		// Add p.ID to index
-		indexBucket := tx.Bucket(IndexKey)
-		id, _ := indexBucket.NextSequence()
-		indexBucket.Put(uint64ToByteSlice(id), []byte(p.ID))
+	_, err := ps.DB.Exec(`
+		INSERT INTO photos
+		(
+			id,
+			url,
+			path,
+			source_path,
+			format,
+			hash,
+			placeholder_uri,
+			width, 
+			height,
+			exif_datetime,
+			exif_makemodel,
+			exif_shutterspeed,
+			exif_fnumber,
+			exif_iso,
+			exif_lensmakemodel,
+			exif_focallength,
+			exif_subjectdistance
+		)
+		VALUES
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);
+		`,
+		p.ID,
+		p.URL,
+		p.Path,
+		p.SourcePath,
+		p.Format,
+		p.Hash,
+		p.PlaceholderURI,
+		p.Width,
+		p.Height,
+		p.Exif.DateTime,
+		p.Exif.MakeModel,
+		p.Exif.ShutterSpeed,
+		p.Exif.FNumber,
+		p.Exif.ISO,
+		p.Exif.LensMakeModel,
+		p.Exif.FocalLength,
+		p.Exif.SubjectDistance,
+	)
+	if err != nil {
+		log.Println(err)
+	}
 
-		// Add p
-		pb, err := json.Marshal(p)
-		if err != nil {
-			return err
-		}
-		photosBucket := tx.Bucket(PhotosKey)
-		photosBucket.Put([]byte(p.ID), pb)
-
-		return nil
-	})
-}
-
-func (ps Photos) Set(p photo.Photo) {
-	ps.DB.Update(func(tx *bolt.Tx) error {
-		b := tx.Bucket(PhotosKey)
-		pb, err := json.Marshal(p)
-		if err != nil {
-			return err
-		}
-		b.Put([]byte(p.ID), pb)
-		return nil
-	})
 }
 
 func (ps Photos) IDs() []string {
-	ids := []string{}
+	var ids []string
 
-	ps.DB.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(IndexKey)
-		b.ForEach(func(k, v []byte) error {
-			ids = append(ids, string(v))
-			return nil
-		})
-		return nil
-	})
+	rows, _ := ps.DB.Query(
+		`SELECT id FROM photos;`,
+	)
+
+	for rows.Next() {
+		var id string
+		rows.Scan(&id)
+		ids = append(ids, id)
+	}
 
 	for i, j := 0, len(ids)-1; i < j; i, j = i+1, j-1 {
 		ids[i], ids[j] = ids[j], ids[i]
@@ -92,52 +115,58 @@ func (ps Photos) Len() int {
 
 func (ps Photos) Get(id string) (photo.Photo, error) {
 	var p photo.Photo
-	err := ps.DB.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket(PhotosKey)
-		pb := b.Get([]byte(id))
-		if pb == nil {
-			return errors.New("photo does not exist")
-		}
-		err := json.Unmarshal(pb, &p)
-		return err
-	})
+	p.Exif = &photo.Exif{}
+
+	row := ps.DB.QueryRow(`
+	SELECT 
+		id,
+		url,
+		path,
+		source_path,
+		format,
+		hash,
+		placeholder_uri,
+		width, 
+		height,
+		exif_datetime,
+		exif_makemodel,
+		exif_shutterspeed,
+		exif_fnumber,
+		exif_iso,
+		exif_lensmakemodel,
+		exif_focallength,
+		exif_subjectdistance
+	FROM photos
+	WHERE id = ?;`, id)
+	err := row.Scan(
+		&p.ID,
+		&p.URL,
+		&p.Path,
+		&p.SourcePath,
+		&p.Format,
+		&p.Hash,
+		&p.PlaceholderURI,
+		&p.Width,
+		&p.Height,
+		&p.Exif.DateTime,
+		&p.Exif.MakeModel,
+		&p.Exif.ShutterSpeed,
+		&p.Exif.FNumber,
+		&p.Exif.ISO,
+		&p.Exif.LensMakeModel,
+		&p.Exif.FocalLength,
+		&p.Exif.SubjectDistance,
+	)
 
 	return p, err
 }
 
 func (ps Photos) Delete(id string) error {
-	err := ps.DB.Update(func(tx *bolt.Tx) error {
-		// Delete from photos
-		photosBucket := tx.Bucket(PhotosKey)
-		err := photosBucket.Delete([]byte(id))
-		if err != nil {
-			return err
-		}
-
-		// Delete from index
-		indexBucket := tx.Bucket(IndexKey)
-		c := indexBucket.Cursor()
-		for k, v := c.First(); k != nil; k, v = c.Next() {
-			if id == string(v) {
-				indexBucket.Delete(k)
-			}
-		}
-
-		return nil
-	})
+	_, err := ps.DB.Exec(
+		`DELETE FROM photos
+		WHERE id = ?
+		`, id,
+	)
 
 	return err
-}
-
-func uint64ToByteSlice(u uint64) []byte {
-	return []byte{
-		byte(0xff & u),
-		byte(0xff & (u >> 8)),
-		byte(0xff & (u >> 16)),
-		byte(0xff & (u >> 24)),
-		byte(0xff & (u >> 32)),
-		byte(0xff & (u >> 40)),
-		byte(0xff & (u >> 48)),
-		byte(0xff & (u >> 56)),
-	}
 }

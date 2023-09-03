@@ -1,6 +1,7 @@
 package panchro
 
 import (
+	"database/sql"
 	"net/http"
 	"strings"
 
@@ -8,7 +9,6 @@ import (
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/server"
 	"github.com/yklcs/panchro/storage"
-	bolt "go.etcd.io/bbolt"
 )
 
 type Server struct {
@@ -26,7 +26,7 @@ func NewServer(port, storepath, dbpath, confpath, s3url string) (*Server, error)
 		return nil, err
 	}
 
-	db, err := bolt.Open(dbpath, 0600, nil)
+	db, err := sql.Open("sqlite", dbpath)
 	if err != nil {
 		return nil, err
 	}
@@ -54,16 +54,14 @@ func NewServer(port, storepath, dbpath, confpath, s3url string) (*Server, error)
 		port:   port,
 		photos: ps,
 	}, nil
-
-	return nil, nil
 }
 
 func (srv *Server) Serve() error {
-	err := srv.photos.Init()
-	if err != nil {
-		return err
-	}
-	err = http.ListenAndServe(":"+srv.port, srv.server.Router)
+	// err := srv.photos.Init()
+	// if err != nil {
+	// return err
+	// }
+	err := http.ListenAndServe(":"+srv.port, srv.server.Router)
 	return err
 }
 

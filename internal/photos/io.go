@@ -102,7 +102,7 @@ func (ps *Photos) ProcessFS(in, out string, compress bool, longSideSize, quality
 			p.URL = purl
 
 			p.Close()
-			ps.Set(p)
+			ps.Add(p)
 		}()
 	}
 

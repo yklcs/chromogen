@@ -1,6 +1,7 @@
 package panchro
 
 import (
+	"database/sql"
 	"io/fs"
 	"os"
 	"path"
@@ -8,7 +9,6 @@ import (
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/internal/render"
-	bolt "go.etcd.io/bbolt"
 )
 
 type StaticSiteGenerator struct {
@@ -29,8 +29,8 @@ func NewStaticSiteGenerator(inpath, outpath, confpath string) (*StaticSiteGenera
 		return nil, err
 	}
 
-	dbpath := path.Join(outpath, "tmp.db")
-	db, err := bolt.Open(dbpath, 0600, nil)
+	dbpath := path.Join(outpath, "panchro.db")
+	db, err := sql.Open("sqlite", dbpath)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,6 @@ func NewStaticSiteGenerator(inpath, outpath, confpath string) (*StaticSiteGenera
 
 func (s *StaticSiteGenerator) Build() error {
 	defer s.photos.DB.Close()
-	defer os.RemoveAll(s.photos.DB.Path())
 	s.photos.Init()
 
 	err := s.photos.ProcessFS(s.inpath, s.outpath, true, 2048, 75)
