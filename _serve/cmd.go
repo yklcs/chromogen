@@ -1,4 +1,4 @@
-package main
+package serve
 
 import (
 	"errors"
@@ -7,11 +7,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/yklcs/panchro"
 )
 
-func serve(args []string) error {
+func Cmd(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
 	storepath := flags.String("s", "panchro", "photo storage path, use s3://... for S3")
 	s3url := flags.String("s3url", "", "S3 URL root, use if S3 is behind CDN")
@@ -37,7 +35,7 @@ func serve(args []string) error {
 		return errors.New("wrong number of arguments")
 	}
 
-	srv, err := panchro.NewServer(*port, *storepath, *dbpath, *confpath, *s3url)
+	srv, err := NewServer(*port, *storepath, *dbpath, *confpath, *s3url)
 	if err != nil {
 		return err
 	}

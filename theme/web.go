@@ -1,8 +1,8 @@
-package web
+package theme
 
 import (
 	"embed"
 )
 
 //go:embed static/* templates/*
-var Content embed.FS
+var FS embed.FS

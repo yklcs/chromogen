@@ -5,7 +5,6 @@ go 1.20
 require (
 	github.com/aws/aws-sdk-go-v2/config v1.18.29
 	github.com/disintegration/imaging v1.6.2
-	github.com/go-chi/chi/v5 v5.0.8
 	github.com/rwcarlsen/goexif v0.0.0-20190401172101-9e8deecbddbd
 	github.com/schollz/progressbar/v3 v3.13.1
 	modernc.org/sqlite v1.25.0

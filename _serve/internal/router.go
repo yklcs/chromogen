@@ -1,4 +1,4 @@
-package server
+package serve
 
 import (
 	"crypto/rand"
@@ -10,16 +10,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/internal/server/handlers"
 	"github.com/yklcs/panchro/internal/utils"
+	"github.com/yklcs/panchro/serve/internal/handlers"
 	"github.com/yklcs/panchro/storage"
 )
 
-type Server struct {
-	Router *chi.Mux
-}
-
-func NewServer(ps *photos.Photos, store storage.Storage, conf *config.Config) (*Server, error) {
+func NewRouter(ps *photos.Photos, store storage.Storage, conf *config.Config) (*chi.Mux, error) {
 	r := chi.NewRouter()
 
 	randbytes := make([]byte, 32)
@@ -64,7 +60,5 @@ func NewServer(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 		r.Get("/*", panchroHandler.Get)
 	})
 
-	return &Server{
-		Router: r,
-	}, nil
+	return r, nil
 }

@@ -23,7 +23,7 @@
         <div id="info">
           {{ if .Config.ThemeConfig.bio }}
             <p class="bio">
-              {{ RenderNewline .Config.ThemeConfig.bio }}
+              {{ .Config.ThemeConfig.bio }}
             </p>
             <div class="pills">
               <span> {{ .Photos.Len }} photos </span>
@@ -46,8 +46,7 @@
         >
           {{ range $i, $id := .Photos.IDs }}
             {{ $img := $.Photos.Get $id }}
-            {{ $idxp := IndexPhoto $img $i }}
-            {{ template "thumb" $idxp }}
+            {{ template "thumb" Map "Photo" $img "Index" $i }}
           {{ end }}
         </div>
       </div>

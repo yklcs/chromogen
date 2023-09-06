@@ -1,10 +1,10 @@
 {{ define "thumb_img" }}
   <img
     class="thumb thumb-unloaded"
-    src="{{ RootResolver .URL }}"
-    alt="{{ .ID }}"
-    width="{{ .Width }}"
-    height="{{ .Height }}"
+    src="{{ RootResolver .Photo.URL }}"
+    alt="{{ .Photo.ID }}"
+    width="{{ .Photo.Width }}"
+    height="{{ .Photo.Height }}"
     loading="{{- if gt .Index 12 -}}
       lazy
     {{- else -}}
@@ -14,7 +14,7 @@
 {{ end }}
 
 {{ define "thumb" }}
-  <a href="{{ RootResolver .ID }}">
+  <a href="{{ RootResolver .Photo.ID }}">
     <figure>
       <noscript>
         {{ template "thumb_img" . }}
@@ -29,16 +29,16 @@
       </noscript>
       <div class="overflow-wrapper">
         <img
-          src="{{ .PlaceholderURI }}"
+          src="{{ .Photo.PlaceholderURI }}"
           class="placeholder placeholder-unloaded"
           alt="{{ RootResolver .Photo.URL }} placeholder"
         />
         {{ template "thumb_img" . }}
       </div>
       <figcaption>
-        {{ if not .Exif.DateTime.IsZero }}
-          <time datetime="{{ .Exif.DateTime }}"
-            >{{ .Exif.DateTime.Format "Jan 2, 2006" }}</time
+        {{ if not .Photo.Exif.DateTime.IsZero }}
+          <time datetime="{{ .Photo.Exif.DateTime }}"
+            >{{ .Photo.Exif.DateTime.Format "Jan 2, 2006" }}</time
           >
         {{ else }}
           <br />

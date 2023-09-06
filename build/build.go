@@ -1,14 +1,12 @@
-package panchro
+package build
 
 import (
 	"database/sql"
-	"io/fs"
 	"os"
 	"path"
 
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/internal/render"
 )
 
 type StaticSiteGenerator struct {
@@ -61,19 +59,22 @@ func (s *StaticSiteGenerator) Build() error {
 	}
 	defer indexHTML.Close()
 
-	err = render.RenderIndex(indexHTML, s.photos, s.conf)
+	theme, err := config.NewTheme(s.conf)
 	if err != nil {
 		return err
 	}
 
-	themeFS := config.LoadTheme(s.conf)
-	staticFS, _ := fs.Sub(themeFS, "static")
+	err = theme.Render(indexHTML, "index", config.ThemeData{Photos: s.photos, Config: s.conf})
+	if err != nil {
+		return err
+	}
+
 	staticDir := path.Join(s.outpath, s.conf.StaticDir)
 	err = os.MkdirAll(staticDir, 0755)
 	if err != nil {
 		return err
 	}
-	err = render.CopyFS(staticFS, staticDir)
+	err = theme.WriteStatic(staticDir)
 	if err != nil {
 		return err
 	}
@@ -92,7 +93,7 @@ func (s *StaticSiteGenerator) Build() error {
 		defer imageHTML.Close()
 
 		p, _ := s.photos.Get(id)
-		err = render.RenderPhoto(imageHTML, &p, s.conf)
+		err = theme.Render(imageHTML, "photo", config.ThemeData{Photo: &p, Config: s.conf})
 		if err != nil {
 			return err
 		}

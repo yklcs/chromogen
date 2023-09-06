@@ -11,6 +11,13 @@ Some key features:
 - Own your own images
 - Minimal JavaScript, super light
 
+## Directory layout
+
+- build: files for `panchro build`
+- internal
+- serve: files for `panchro serve`
+- web
+
 ## Get started
 
 Download the latest release, or build and install via the Go toolchain:

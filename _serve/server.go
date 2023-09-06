@@ -1,13 +1,14 @@
-package panchro
+package serve
 
 import (
 	"database/sql"
 	"net/http"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/internal/server"
+	serve "github.com/yklcs/panchro/serve/internal"
 	"github.com/yklcs/panchro/storage"
 )
 
@@ -17,7 +18,7 @@ type Server struct {
 	conf   *config.Config
 	photos *photos.Photos
 	port   string
-	server *server.Server
+	router *chi.Mux
 }
 
 func NewServer(port, storepath, dbpath, confpath, s3url string) (*Server, error) {
@@ -46,10 +47,10 @@ func NewServer(port, storepath, dbpath, confpath, s3url string) (*Server, error)
 		return nil, err
 	}
 
-	srv, _ := server.NewServer(ps, store, conf)
+	srv, _ := serve.NewRouter(ps, store, conf)
 
 	return &Server{
-		server: srv,
+		router: srv,
 		conf:   conf,
 		port:   port,
 		photos: ps,
@@ -61,7 +62,7 @@ func (srv *Server) Serve() error {
 	// if err != nil {
 	// return err
 	// }
-	err := http.ListenAndServe(":"+srv.port, srv.server.Router)
+	err := http.ListenAndServe(":"+srv.port, srv.router)
 	return err
 }
 

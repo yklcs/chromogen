@@ -1,14 +1,12 @@
-package main
+package build
 
 import (
 	"errors"
 	"flag"
 	"fmt"
-
-	"github.com/yklcs/panchro"
 )
 
-func build(args []string) error {
+func Cmd(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
 	out := flags.String("o", "dist", "output directory")
 	confpath := flags.String("c", "panchro.json", "configuration json file path")
@@ -33,7 +31,7 @@ func build(args []string) error {
 
 	in := flags.Args()[0]
 
-	ssg, err := panchro.NewStaticSiteGenerator(in, *out, *confpath)
+	ssg, err := NewStaticSiteGenerator(in, *out, *confpath)
 	if err != nil {
 		return err
 	}

@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/yklcs/panchro/build"
 )
 
 func usage() {
 	fmt.Print(`panchro <command>
 Usage:
 	panchro build		build panchro site
-	panchro serve		serve panchro site
 
 `)
 }
@@ -24,9 +25,7 @@ func main() {
 	var run func([]string) error
 	switch strings.ToLower(os.Args[1]) {
 	case "build":
-		run = build
-	case "serve":
-		run = serve
+		run = build.Cmd
 	case "help":
 		usage()
 		os.Exit(0)
