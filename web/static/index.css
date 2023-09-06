@@ -314,14 +314,12 @@ img.thumb.thumb-unloaded {
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
   background: var(--bg-sub);
-  /* border-bottom: 1px solid; */
-  background: var(--bg-subsub);
   padding: 0.5rem;
 }
 
 .exif-lens {
-  border-right: 1px solid var(--bg-subsub);
-  border-left: 1px solid var(--bg-subsub);
+  border-right: 1px solid var(--bg-sub);
+  border-left: 1px solid var(--bg-sub);
   padding: 0.5rem;
 }
 
@@ -329,7 +327,7 @@ img.thumb.thumb-unloaded {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  border: 1px solid var(--bg-subsub);
+  border: 1px solid var(--bg-sub);
   border-radius: 0.5rem;
   border-top-right-radius: 0;
   border-top-left-radius: 0;
