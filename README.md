@@ -10,6 +10,7 @@ Some key features:
 - REST API
 - Own your own images
 - Minimal JavaScript, super light
+- RSS/Atom feed
 
 ## Directory layout
 
@@ -17,6 +18,10 @@ Some key features:
 - internal
 - serve: files for `panchro serve`
 - web
+
+## Design
+
+Images are ordered by file name (descending).
 
 ## Get started
 

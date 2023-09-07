@@ -9,7 +9,6 @@ import (
 	"path"
 	"strings"
 
-	"github.com/yklcs/panchro/internal/photo"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/theme"
 )
@@ -75,7 +74,7 @@ func NewTheme(conf *Config) (*Theme, error) {
 
 type ThemeData struct {
 	Photos *photos.Photos
-	Photo  *photo.Photo
+	Photo  *photos.Photo
 	Config *Config
 }
 

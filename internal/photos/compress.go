@@ -1,4 +1,4 @@
-package photo
+package photos
 
 import (
 	"bytes"
@@ -10,24 +10,6 @@ import (
 	"github.com/disintegration/imaging"
 	"github.com/yklcs/wasmimg/mozjpeg"
 )
-
-func (p *Photo) ResizeAndCompress(longSideSize int, quality int) (int, int, error) {
-	r, err := NewReader(*p)
-	if err != nil {
-		return 0, 0, err
-	}
-	var buf bytes.Buffer
-	w, h, err := ResizeAndCompressStd(r, &buf, longSideSize, quality)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	p.Close()
-	p.Open()
-	buf.WriteTo(p)
-
-	return w, h, nil
-}
 
 func ResizeAndCompressStd(r io.Reader, w io.Writer, longSideSize int, quality int) (int, int, error) {
 	img, err := imaging.Decode(r, imaging.AutoOrientation(true))

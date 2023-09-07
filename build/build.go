@@ -7,6 +7,7 @@ import (
 
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
+	"github.com/yklcs/panchro/storage"
 )
 
 type StaticSiteGenerator struct {
@@ -48,10 +49,16 @@ func (s *StaticSiteGenerator) Build() error {
 		return err
 	}
 
-	err = s.photos.ProcessFS(s.inpath, s.outpath, true, 2048, 75)
+	err = s.photos.LoadFS(s.inpath)
 	if err != nil {
 		return err
 	}
+	store, _ := storage.NewLocalStorage(s.outpath)
+	s.photos.Upload(store)
+	// err = s.photos.ProcessFS(s.inpath, s.outpath, true, 2048, 75)
+	// if err != nil {
+	// return err
+	// }
 
 	indexHTML, err := os.Create(path.Join(s.outpath, "index.html"))
 	if err != nil {
@@ -93,7 +100,7 @@ func (s *StaticSiteGenerator) Build() error {
 		defer imageHTML.Close()
 
 		p, _ := s.photos.Get(id)
-		err = theme.Render(imageHTML, "photo", config.ThemeData{Photo: &p, Config: s.conf})
+		err = theme.Render(imageHTML, "photo", config.ThemeData{Photo: p, Config: s.conf})
 		if err != nil {
 			return err
 		}

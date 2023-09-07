@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 
-	"github.com/yklcs/panchro/internal/photo"
 	_ "modernc.org/sqlite"
 )
 
@@ -15,7 +14,7 @@ type Photos struct {
 	DB *sql.DB
 }
 
-func (ps *Photos) Load(dbpath string) (bool, error) {
+func (ps *Photos) LoadDB(dbpath string) (bool, error) {
 	if _, err := os.Stat(dbpath); errors.Is(err, fs.ErrNotExist) {
 		return false, nil
 	}
@@ -39,6 +38,7 @@ func (ps *Photos) Init() error {
 			placeholder_uri TEXT,
 			width INTEGER,
 			height INTEGER,
+			data BLOB,
 			
 			exif_datetime DATETIME,
 			exif_makemodel TEXT,
@@ -54,7 +54,7 @@ func (ps *Photos) Init() error {
 	return err
 }
 
-func (ps Photos) Add(p photo.Photo) {
+func (ps Photos) Set(p *Photo) {
 	_, err := ps.DB.Exec(`
 		INSERT OR REPLACE INTO photos
 		(
@@ -67,6 +67,7 @@ func (ps Photos) Add(p photo.Photo) {
 			placeholder_uri,
 			width, 
 			height,
+			data,
 			exif_datetime,
 			exif_makemodel,
 			exif_shutterspeed,
@@ -77,7 +78,7 @@ func (ps Photos) Add(p photo.Photo) {
 			exif_subjectdistance
 		)
 		VALUES
-		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);
 		`,
 		p.ID,
 		p.URL,
@@ -88,6 +89,7 @@ func (ps Photos) Add(p photo.Photo) {
 		p.PlaceholderURI,
 		p.Width,
 		p.Height,
+		p.data,
 		p.Exif.DateTime,
 		p.Exif.MakeModel,
 		p.Exif.ShutterSpeed,
@@ -96,6 +98,7 @@ func (ps Photos) Add(p photo.Photo) {
 		p.Exif.LensMakeModel,
 		p.Exif.FocalLength,
 		p.Exif.SubjectDistance,
+		p.data,
 	)
 	if err != nil {
 		log.Println(err)
@@ -123,9 +126,9 @@ func (ps Photos) Len() int {
 	return len(ps.IDs())
 }
 
-func (ps Photos) Get(id string) (photo.Photo, error) {
-	var p photo.Photo
-	p.Exif = &photo.Exif{}
+func (ps Photos) Get(id string) (*Photo, error) {
+	var p Photo
+	p.Exif = &Exif{}
 
 	row := ps.DB.QueryRow(`
 	SELECT * FROM photos
@@ -140,6 +143,7 @@ func (ps Photos) Get(id string) (photo.Photo, error) {
 		&p.PlaceholderURI,
 		&p.Width,
 		&p.Height,
+		&p.data,
 		&p.Exif.DateTime,
 		&p.Exif.MakeModel,
 		&p.Exif.ShutterSpeed,
@@ -150,7 +154,7 @@ func (ps Photos) Get(id string) (photo.Photo, error) {
 		&p.Exif.SubjectDistance,
 	)
 
-	return p, err
+	return &p, err
 }
 
 func (ps Photos) Delete(id string) error {
