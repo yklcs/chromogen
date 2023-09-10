@@ -30,24 +30,22 @@ func (ps *Photos) Init() error {
 	_, err := ps.DB.Exec(`
 		CREATE TABLE IF NOT EXISTS photos(
 			id TEXT PRIMARY KEY,
-			url TEXT,
-			path TEXT,
-			source_path TEXT,
-			format TEXT,
-			hash BLOB,
-			placeholder_uri TEXT,
-			width INTEGER,
-			height INTEGER,
-			data BLOB,
-			
-			exif_datetime DATETIME,
-			exif_makemodel TEXT,
-			exif_shutterspeed TEXT,
-			exif_fnumber TEXT,
-			exif_iso TEXT,
-			exif_lensmakemodel TEXT,
-			exif_focallength TEXT,
-			exif_subjectdistance TEXT
+			url TEXT NOT NULL,
+			path TEXT NOT NULL,
+			format TEXT NOT NULL,
+			hash BLOB NOT NULL,
+			placeholder_uri TEXT NOT NULL,
+			width INTEGER NOT NULL,
+			height INTEGER NOT NULL,
+			data BLOB NOT NULL,
+			exif_datetime DATETIME NOT NULL,
+			exif_makemodel TEXT NOT NULL,
+			exif_shutterspeed TEXT NOT NULL,
+			exif_fnumber TEXT NOT NULL,
+			exif_iso TEXT NOT NULL,
+			exif_lensmakemodel TEXT NOT NULL,
+			exif_focallength TEXT NOT NULL,
+			exif_subjectdistance TEXT NOT NULL
 		);
 	`)
 
@@ -55,13 +53,16 @@ func (ps *Photos) Init() error {
 }
 
 func (ps Photos) Set(p *Photo) {
+	if p.Exif == nil {
+		p.Exif = &Exif{}
+	}
+
 	_, err := ps.DB.Exec(`
 		INSERT OR REPLACE INTO photos
 		(
 			id,
 			url,
 			path,
-			source_path,
 			format,
 			hash,
 			placeholder_uri,
@@ -78,12 +79,11 @@ func (ps Photos) Set(p *Photo) {
 			exif_subjectdistance
 		)
 		VALUES
-		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);
 		`,
 		p.ID,
 		p.URL,
 		p.Path,
-		p.SourcePath,
 		p.Format,
 		p.Hash,
 		p.PlaceholderURI,
@@ -98,7 +98,6 @@ func (ps Photos) Set(p *Photo) {
 		p.Exif.LensMakeModel,
 		p.Exif.FocalLength,
 		p.Exif.SubjectDistance,
-		p.data,
 	)
 	if err != nil {
 		log.Println(err)
@@ -137,7 +136,6 @@ func (ps Photos) Get(id string) (*Photo, error) {
 		&p.ID,
 		&p.URL,
 		&p.Path,
-		&p.SourcePath,
 		&p.Format,
 		&p.Hash,
 		&p.PlaceholderURI,
@@ -158,10 +156,9 @@ func (ps Photos) Get(id string) (*Photo, error) {
 }
 
 func (ps Photos) Delete(id string) error {
-	_, err := ps.DB.Exec(
-		`DELETE FROM photos
-		WHERE id = ?
-		`, id,
+	_, err := ps.DB.Exec(`
+		DELETE FROM photos
+		WHERE id = ?`, id,
 	)
 
 	return err

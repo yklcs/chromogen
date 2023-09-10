@@ -13,38 +13,36 @@ import (
 )
 
 type Photo struct {
-	ID string `json:"id"`
+	ID string
 
 	Title       string
 	Description string
 	Tags        []string
 
-	URL  string `json:"url"`
-	Path string `json:"path"`
+	URL  string
+	Path string
 
-	SourcePath string `json:"-"`
+	Format string
+	Hash   []byte
 
-	Format string `json:"format"`
-	Hash   []byte `json:"hash"`
+	Exif *Exif
 
-	Exif *Exif `json:"exif"`
-
-	PlaceholderURI template.URL `json:"placeholder_uri"`
-	Width          int          `json:"width"`
-	Height         int          `json:"height"`
+	PlaceholderURI template.URL
+	Width          int
+	Height         int
 
 	data []byte
 }
 
 type Exif struct {
-	DateTime        time.Time `json:"datetime"`
-	MakeModel       string    `json:"makemodel"`
-	ShutterSpeed    string    `json:"shutterspeed"`
-	FNumber         string    `json:"fnumber"`
-	ISO             string    `json:"iso"`
-	LensMakeModel   string    `json:"lens_makemodel"`
-	FocalLength     string    `json:"focallength"`
-	SubjectDistance string    `json:"subjectdistance"`
+	DateTime        time.Time
+	MakeModel       string
+	ShutterSpeed    string
+	FNumber         string
+	ISO             string
+	LensMakeModel   string
+	FocalLength     string
+	SubjectDistance string
 }
 
 func NewPhotoFromFile(filepath string) (*Photo, error) {
@@ -70,11 +68,13 @@ func NewPhotoFromFile(filepath string) (*Photo, error) {
 	p.Path = p.ID + "." + p.Format
 
 	x, err := exif.Decode(bytes.NewReader(p.data))
-
 	if err == nil {
 		p.Exif = processExif(x)
+	} else {
+		p.Exif = &Exif{}
 	}
-	p.PlaceholderURI = template.URL(generatePlaceholderURI(bytes.NewReader(p.data)))
+	p.PlaceholderURI = template.URL(
+		generatePlaceholderURI(bytes.NewReader(p.data)))
 
 	return &p, nil
 }

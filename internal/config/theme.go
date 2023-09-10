@@ -39,7 +39,7 @@ func NewTheme(conf *Config) (*Theme, error) {
 	templatesFS, _ := fs.Sub(themeFS, "templates")
 	staticFS, _ := fs.Sub(themeFS, "static")
 
-	tmpl, err := template.New("").Funcs(template.FuncMap{
+	funcmap := template.FuncMap{
 		"Map": func(values ...any) (map[string]any, error) {
 			if len(values)%2 != 0 {
 				return nil, errors.New("invalid map call")
@@ -60,7 +60,9 @@ func NewTheme(conf *Config) (*Theme, error) {
 			}
 			return path.Join(p...)
 		},
-	}).ParseFS(templatesFS, "*.tmpl")
+	}
+
+	tmpl, err := template.New("").Funcs(funcmap).ParseFS(templatesFS, "*.tmpl")
 	if err != nil {
 		return nil, err
 	}

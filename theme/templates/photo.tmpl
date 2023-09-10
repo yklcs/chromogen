@@ -17,14 +17,17 @@
               >
             {{ end }}
             <div class="image-meta-exif">
-              <div class="exif-makemodel">
-                {{ .Photo.Exif.MakeModel }}
-              </div>
+              {{ if ne .Photo.Exif.MakeModel "" }}
+                <div class="exif-makemodel">
+                  {{ .Photo.Exif.MakeModel }}
+                </div>
+              {{ end }}
               {{ if .Photo.Exif.LensMakeModel }}
                 <div class="exif-lens">
                   {{ .Photo.Exif.LensMakeModel }}
                 </div>
               {{ end }}
+              {{ if or .Photo.Exif.ISO .Photo.Exif.FocalLength .Photo.Exif.FNumber .Photo.Exif.ShutterSpeed }}
               <div class="exif-exposure">
                 <span>{{ .Photo.Exif.ISO }}</span>
                 <span class="separator"></span>
@@ -34,6 +37,7 @@
                 <span class="separator"></span>
                 <span>{{ .Photo.Exif.ShutterSpeed }}</span>
               </div>
+              {{ end }}
             </div>
             <a class="footlink" href="{{ RootResolver `/` }}">
               {{ .Config.Title }}
