@@ -2,22 +2,24 @@ package build
 
 import (
 	"database/sql"
+	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/yklcs/panchro/internal/config"
 	"github.com/yklcs/panchro/internal/photos"
 	"github.com/yklcs/panchro/storage"
+	"golang.org/x/exp/slices"
 )
 
 type StaticSiteGenerator struct {
-	inpath  string
 	outpath string
 	conf    *config.Config
 	photos  *photos.Photos
 }
 
-func NewStaticSiteGenerator(inpath, outpath, confpath string) (*StaticSiteGenerator, error) {
+func NewStaticSiteGenerator(outpath, confpath string) (*StaticSiteGenerator, error) {
 	conf, err := config.ReadConfig(confpath)
 	if err != nil {
 		return nil, err
@@ -35,30 +37,34 @@ func NewStaticSiteGenerator(inpath, outpath, confpath string) (*StaticSiteGenera
 	}
 
 	return &StaticSiteGenerator{
-		inpath:  inpath,
 		outpath: outpath,
 		conf:    conf,
 		photos:  &photos.Photos{DB: db},
 	}, nil
 }
 
-func (s *StaticSiteGenerator) Build() error {
+func (s *StaticSiteGenerator) Build(inpaths []string) error {
 	defer s.photos.DB.Close()
 	err := s.photos.Init()
 	if err != nil {
 		return err
 	}
 
-	err = s.photos.LoadFS(s.inpath)
+	inpaths, err = flattenPhotoPaths(inpaths, []string{".jpg", ".jpeg", ".png"})
 	if err != nil {
 		return err
 	}
+
 	store, _ := storage.NewLocalStorage(s.outpath)
-	s.photos.Upload(store)
-	// err = s.photos.ProcessFS(s.inpath, s.outpath, true, 2048, 75)
-	// if err != nil {
-	// return err
-	// }
+	err = s.photos.LoadFiles(inpaths, store)
+	if err != nil {
+		return err
+	}
+
+	theme, err := config.NewTheme(s.conf)
+	if err != nil {
+		return err
+	}
 
 	indexHTML, err := os.Create(path.Join(s.outpath, "index.html"))
 	if err != nil {
@@ -66,12 +72,8 @@ func (s *StaticSiteGenerator) Build() error {
 	}
 	defer indexHTML.Close()
 
-	theme, err := config.NewTheme(s.conf)
-	if err != nil {
-		return err
-	}
-
-	err = theme.Render(indexHTML, "index", config.ThemeData{Photos: s.photos, Config: s.conf})
+	err = theme.Render(indexHTML, "index",
+		config.ThemeData{Photos: s.photos, Config: s.conf})
 	if err != nil {
 		return err
 	}
@@ -107,4 +109,26 @@ func (s *StaticSiteGenerator) Build() error {
 	}
 
 	return nil
+}
+
+func flattenPhotoPaths(dirs []string, exts []string) ([]string, error) {
+	var matched []string
+	for _, dir := range dirs {
+		err := filepath.WalkDir(dir, func(s string, d fs.DirEntry, e error) error {
+			if e != nil {
+				return e
+			}
+			if d.IsDir() {
+				return nil
+			}
+			if slices.Contains(exts, filepath.Ext(d.Name())) {
+				matched = append(matched, s)
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return matched, nil
 }

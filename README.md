@@ -37,20 +37,15 @@ $ panchro serve
 Building/serving related config is done through CLI flags, and site related config is done through [a JSON file](panchro.example.json).
 
 ```shell
-# build static site (input from ./images, output to ./dist)
+# Build site from images/
 $ panchro build images
 
-# build static site (input from ./images, output to ./out, read config from config.json)
-$ panchro build -o out -c config.json images
+# Build site from images/ and add new.jpg to site
+$ panchro build images
+$ panchro build new.jpg
 
-# start server (save photos to ./panchro, save DB to ./panchro.db, listen on :8000)
-$ panchro serve
-
-# start server (save photos to ./store, listen on :1234)
-$ panchro -s store -p 1234 serve
-
-# start server (save photos to s3://photos using default AWS config)
-$ panchro -s s3://photos serve
+# Build site from images/ with config from config.json
+$ panchro build -c=config.json images
 ```
 
 ### Auth

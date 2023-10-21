@@ -5,11 +5,12 @@ import (
 	"crypto/sha256"
 	"html/template"
 	"image"
-	"os"
+	"io"
 	"time"
 
 	"github.com/rwcarlsen/goexif/exif"
 	"github.com/yklcs/panchro/internal/utils"
+	"github.com/yklcs/panchro/storage"
 )
 
 type Photo struct {
@@ -30,8 +31,6 @@ type Photo struct {
 	PlaceholderURI template.URL
 	Width          int
 	Height         int
-
-	data []byte
 }
 
 type Exif struct {
@@ -45,16 +44,13 @@ type Exif struct {
 	SubjectDistance string
 }
 
-func NewPhotoFromFile(filepath string) (*Photo, error) {
+func NewPhoto(r io.Reader, store storage.Storage) (*Photo, error) {
 	var p Photo
-	var err error
+	var buf bytes.Buffer
 
-	p.data, err = os.ReadFile(filepath)
-	if err != nil {
-		return nil, err
-	}
+	buf.ReadFrom(r)
 
-	cfg, format, err := image.DecodeConfig(bytes.NewReader(p.data))
+	cfg, format, err := image.DecodeConfig(bytes.NewReader(buf.Bytes()))
 	if err != nil {
 		return nil, err
 	}
@@ -62,19 +58,25 @@ func NewPhotoFromFile(filepath string) (*Photo, error) {
 	p.Height = cfg.Height
 	p.Format = format
 
-	hash := sha256.Sum256(p.data)
+	hash := sha256.Sum256(buf.Bytes())
 	p.Hash = hash[:]
 	p.ID = utils.Base58Encode(p.Hash)[:6]
 	p.Path = p.ID + "." + p.Format
 
-	x, err := exif.Decode(bytes.NewReader(p.data))
+	x, err := exif.Decode(bytes.NewReader(buf.Bytes()))
 	if err == nil {
 		p.Exif = processExif(x)
 	} else {
 		p.Exif = &Exif{}
 	}
 	p.PlaceholderURI = template.URL(
-		generatePlaceholderURI(bytes.NewReader(p.data)))
+		generatePlaceholderURI(bytes.NewReader(buf.Bytes())))
+
+	url, err := store.Upload(bytes.NewReader(buf.Bytes()), p.Path)
+	if err != nil {
+		return nil, err
+	}
+	p.URL = url
 
 	return &p, nil
 }

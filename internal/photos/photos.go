@@ -2,28 +2,13 @@ package photos
 
 import (
 	"database/sql"
-	"errors"
-	"io/fs"
 	"log"
-	"os"
 
 	_ "modernc.org/sqlite"
 )
 
 type Photos struct {
 	DB *sql.DB
-}
-
-func (ps *Photos) LoadDB(dbpath string) (bool, error) {
-	if _, err := os.Stat(dbpath); errors.Is(err, fs.ErrNotExist) {
-		return false, nil
-	}
-	db, err := sql.Open("sqlite", dbpath)
-	if err != nil {
-		return false, err
-	}
-	ps.DB = db
-	return true, nil
 }
 
 func (ps *Photos) Init() error {
@@ -37,7 +22,6 @@ func (ps *Photos) Init() error {
 			placeholder_uri TEXT NOT NULL,
 			width INTEGER NOT NULL,
 			height INTEGER NOT NULL,
-			data BLOB NOT NULL,
 			exif_datetime DATETIME NOT NULL,
 			exif_makemodel TEXT NOT NULL,
 			exif_shutterspeed TEXT NOT NULL,
@@ -53,6 +37,10 @@ func (ps *Photos) Init() error {
 }
 
 func (ps Photos) Set(p *Photo) {
+	if p == nil {
+		return
+	}
+
 	if p.Exif == nil {
 		p.Exif = &Exif{}
 	}
@@ -68,7 +56,6 @@ func (ps Photos) Set(p *Photo) {
 			placeholder_uri,
 			width, 
 			height,
-			data,
 			exif_datetime,
 			exif_makemodel,
 			exif_shutterspeed,
@@ -79,7 +66,7 @@ func (ps Photos) Set(p *Photo) {
 			exif_subjectdistance
 		)
 		VALUES
-		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);
 		`,
 		p.ID,
 		p.URL,
@@ -89,7 +76,6 @@ func (ps Photos) Set(p *Photo) {
 		p.PlaceholderURI,
 		p.Width,
 		p.Height,
-		p.data,
 		p.Exif.DateTime,
 		p.Exif.MakeModel,
 		p.Exif.ShutterSpeed,
@@ -102,7 +88,6 @@ func (ps Photos) Set(p *Photo) {
 	if err != nil {
 		log.Println(err)
 	}
-
 }
 
 func (ps Photos) IDs() []string {
@@ -141,7 +126,6 @@ func (ps Photos) Get(id string) (*Photo, error) {
 		&p.PlaceholderURI,
 		&p.Width,
 		&p.Height,
-		&p.data,
 		&p.Exif.DateTime,
 		&p.Exif.MakeModel,
 		&p.Exif.ShutterSpeed,

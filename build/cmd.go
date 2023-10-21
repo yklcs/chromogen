@@ -24,18 +24,18 @@ func Cmd(args []string) error {
 		return err
 	}
 
-	if len(flags.Args()) != 1 {
+	if len(flags.Args()) == 0 {
 		flags.Usage()
 		return errors.New("wrong number of arguments")
 	}
 
-	in := flags.Args()[0]
+	in := flags.Args()
 
-	ssg, err := NewStaticSiteGenerator(in, *out, *confpath)
+	ssg, err := NewStaticSiteGenerator(*out, *confpath)
 	if err != nil {
 		return err
 	}
-	err = ssg.Build()
+	err = ssg.Build(in)
 
 	return err
 }

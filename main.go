@@ -12,8 +12,7 @@ func usage() {
 	fmt.Print(`panchro <command>
 Usage:
 	panchro build		build panchro site
-
-`)
+	`)
 }
 
 func main() {
