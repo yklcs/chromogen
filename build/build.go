@@ -7,9 +7,9 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/yklcs/panchro/internal/config"
-	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/storage"
+	"github.com/yklcs/chromogen/internal/config"
+	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/storage"
 	"golang.org/x/exp/slices"
 )
 
@@ -30,7 +30,7 @@ func NewStaticSiteGenerator(outpath, confpath string) (*StaticSiteGenerator, err
 		return nil, err
 	}
 
-	dbpath := path.Join(outpath, "panchro.db")
+	dbpath := path.Join(outpath, "chromogen.db")
 	db, err := sql.Open("sqlite", dbpath)
 	if err != nil {
 		return nil, err

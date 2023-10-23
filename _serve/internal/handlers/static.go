@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/yklcs/panchro/internal/config"
+	"github.com/yklcs/chromogen/internal/config"
 )
 
 type StaticHandler struct {

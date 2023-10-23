@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/yklcs/panchro/internal/config"
-	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/internal/render"
+	"github.com/yklcs/chromogen/internal/config"
+	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/internal/render"
 )
 
 type IndexHandler struct {

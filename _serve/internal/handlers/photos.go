@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/yklcs/panchro/internal/photo"
-	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/storage"
+	"github.com/yklcs/chromogen/internal/photo"
+	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/storage"
 )
 
 type PhotosHandler struct {

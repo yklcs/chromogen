@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/yklcs/panchro/storage"
+	"github.com/yklcs/chromogen/storage"
 )
 
 type ImageHandler struct {

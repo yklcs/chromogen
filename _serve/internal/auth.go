@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/yklcs/panchro/internal/config"
-	"github.com/yklcs/panchro/internal/render"
+	"github.com/yklcs/chromogen/internal/config"
+	"github.com/yklcs/chromogen/internal/render"
 )
 
 func Auth(key string) func(next http.Handler) http.Handler {

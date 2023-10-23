@@ -1,4 +1,4 @@
-# panchro
+# chromogen
 
 Self-hosted image gallery.
 
@@ -14,9 +14,9 @@ Some key features:
 
 ## Directory layout
 
-- build: files for `panchro build`
+- build: files for `chromogen build`
 - internal
-- serve: files for `panchro serve`
+- serve: files for `chromogen serve`
 - web
 
 ## Design
@@ -28,24 +28,24 @@ Images are ordered by file name (descending).
 Download the latest release, or build and install via the Go toolchain:
 
 ```shell
-$ go install github.com/yklcs/panchro@latest
-$ panchro serve
+$ go install github.com/yklcs/chromogen@latest
+$ chromogen serve
 ```
 
 ## Usage
 
-Building/serving related config is done through CLI flags, and site related config is done through [a JSON file](panchro.example.json).
+Building/serving related config is done through CLI flags, and site related config is done through [a JSON file](chromogen.example.json).
 
 ```shell
 # Build site from images/
-$ panchro build images
+$ chromogen build images
 
 # Build site from images/ and add new.jpg to site
-$ panchro build images
-$ panchro build new.jpg
+$ chromogen build images
+$ chromogen build new.jpg
 
 # Build site from images/ with config from config.json
-$ panchro build -c=config.json images
+$ chromogen build -c=config.json images
 ```
 
 ### Auth
@@ -91,7 +91,7 @@ Look at [web/](web/) for an example of the default theme. Mandatory template fil
 
 - index.tmpl
 - photo.tmpl
-- panchro.tmpl
+- chromogen.tmpl
 - auth.tmpl
 
 Theme-specific config should go in `"theme_config"` of the config file.

@@ -9,8 +9,8 @@ import (
 	"path"
 	"strings"
 
-	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/theme"
+	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/theme"
 )
 
 func LoadTheme(conf *Config) fs.FS {

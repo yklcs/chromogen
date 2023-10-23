@@ -8,11 +8,11 @@ import (
 	"path"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/yklcs/panchro/internal/config"
-	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/internal/utils"
-	"github.com/yklcs/panchro/serve/internal/handlers"
-	"github.com/yklcs/panchro/storage"
+	"github.com/yklcs/chromogen/internal/config"
+	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/internal/utils"
+	"github.com/yklcs/chromogen/serve/internal/handlers"
+	"github.com/yklcs/chromogen/storage"
 )
 
 func NewRouter(ps *photos.Photos, store storage.Storage, conf *config.Config) (*chi.Mux, error) {
@@ -40,7 +40,7 @@ func NewRouter(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 		Photos: ps,
 		Conf:   conf,
 	}
-	panchroHandler := handlers.PanchroHandler{
+	chromogenHandler := handlers.ChromogenHandler{
 		Photos: ps,
 		Conf:   conf,
 	}
@@ -55,9 +55,9 @@ func NewRouter(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 	r.Get("/{id}.jpg", imageHandler.Get)
 	r.Get("/", indexHandler.Get)
 
-	r.Route("/panchro", func(r chi.Router) {
+	r.Route("/chromogen", func(r chi.Router) {
 		r.Use(AuthPage(token, conf))
-		r.Get("/*", panchroHandler.Get)
+		r.Get("/*", chromogenHandler.Get)
 	})
 
 	return r, nil

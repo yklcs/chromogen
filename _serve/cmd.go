@@ -11,17 +11,17 @@ import (
 
 func Cmd(args []string) error {
 	flags := flag.NewFlagSet("build", flag.ExitOnError)
-	storepath := flags.String("s", "panchro", "photo storage path, use s3://... for S3")
+	storepath := flags.String("s", "chromogen", "photo storage path, use s3://... for S3")
 	s3url := flags.String("s3url", "", "S3 URL root, use if S3 is behind CDN")
-	dbpath := flags.String("db", "panchro.db", "db path")
-	confpath := flags.String("c", "panchro.json", "configuration json file path")
+	dbpath := flags.String("db", "chromogen.db", "db path")
+	confpath := flags.String("c", "chromogen.json", "configuration json file path")
 	port := flags.String("p", "8000", "port")
 
 	flags.Usage = func() {
-		fmt.Fprintln(flags.Output(), "Usage: panchro serve [...flags] <input url>")
+		fmt.Fprintln(flags.Output(), "Usage: chromogen serve [...flags] <input url>")
 		fmt.Fprintln(flags.Output(), "Flags:")
 		flags.PrintDefaults()
-		fmt.Fprintln(flags.Output(), "Example: panchro serve  -o=output -c=config.json images")
+		fmt.Fprintln(flags.Output(), "Example: chromogen serve  -o=output -c=config.json images")
 		fmt.Fprintln(flags.Output())
 	}
 

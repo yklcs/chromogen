@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/yklcs/panchro/internal/config"
-	"github.com/yklcs/panchro/internal/photos"
-	serve "github.com/yklcs/panchro/serve/internal"
-	"github.com/yklcs/panchro/storage"
+	"github.com/yklcs/chromogen/internal/config"
+	"github.com/yklcs/chromogen/internal/photos"
+	serve "github.com/yklcs/chromogen/serve/internal"
+	"github.com/yklcs/chromogen/storage"
 )
 
 type Server struct {

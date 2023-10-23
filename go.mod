@@ -1,4 +1,4 @@
-module github.com/yklcs/panchro
+module github.com/yklcs/chromogen
 
 go 1.20
 

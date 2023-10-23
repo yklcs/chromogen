@@ -2,6 +2,6 @@
 test/
 dist/
 node_modules/
-/panchro/
-panchro.db
+/chromogen/
+chromogen.db
 *.local.*

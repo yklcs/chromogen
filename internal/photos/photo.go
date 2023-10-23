@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/rwcarlsen/goexif/exif"
-	"github.com/yklcs/panchro/internal/utils"
-	"github.com/yklcs/panchro/storage"
+	"github.com/yklcs/chromogen/internal/utils"
+	"github.com/yklcs/chromogen/storage"
 )
 
 type Photo struct {

@@ -5,13 +5,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/yklcs/panchro/build"
+	"github.com/yklcs/chromogen/build"
 )
 
 func usage() {
-	fmt.Print(`panchro <command>
+	fmt.Print(`chromogen <command>
 Usage:
-	panchro build		build panchro site
+	chromogen build		build chromogen site
 	`)
 }
 
@@ -35,7 +35,7 @@ func main() {
 
 	if err := run(os.Args[2:]); err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
-		fmt.Fprintf(os.Stderr, `run "panchro %s -h" for help\n`, os.Args[1])
+		fmt.Fprintf(os.Stderr, `run "chromogen %s -h" for help\n`, os.Args[1])
 		os.Exit(1)
 	}
 }

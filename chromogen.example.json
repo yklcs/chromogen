@@ -1,0 +1,10 @@
+{
+  "title": "Chromogen Demo",
+  "root": "",
+  "default_view_mode": "gallery",
+  "theme": "./theme",
+  "theme_config": {
+    "bio": "This is a demo instance for Chromogen, an open source image gallery. Run your own instance by clicking the Github link below.",
+    "links": [{ "name": "Github", "href": "https://github.com/yklcs/chromogen" }]
+  }
+}

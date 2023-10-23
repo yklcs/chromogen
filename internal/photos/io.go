@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/schollz/progressbar/v3"
-	"github.com/yklcs/panchro/storage"
+	"github.com/yklcs/chromogen/storage"
 	"golang.org/x/exp/slices"
 )
 

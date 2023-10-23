@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/yklcs/panchro/internal/config"
-	"github.com/yklcs/panchro/internal/photos"
-	"github.com/yklcs/panchro/internal/render"
+	"github.com/yklcs/chromogen/internal/config"
+	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/internal/render"
 )
 
 type PhotoHandler struct {

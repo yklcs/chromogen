@@ -418,7 +418,7 @@ input[type="text"] {
   padding: 1rem;
 }
 
-button#panchro-submit {
+button#chromogen-submit {
   background-color: var(--bg-sub);
   padding: 1rem;
 }

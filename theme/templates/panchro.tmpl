@@ -1,4 +1,4 @@
-{{ define "panchro" }}
+{{ define "chromogen" }}
   <!DOCTYPE html>
   <html lang="en">
     {{ template "head" . }}
@@ -27,10 +27,10 @@
               <input
                 type="text"
                 name="token"
-                id="panchro-token"
+                id="chromogen-token"
                 placeholder="Token"
               />
-              <button id="panchro-submit">Submit</button>
+              <button id="chromogen-submit">Submit</button>
             </form>
           </div>
           <div>
@@ -49,12 +49,12 @@
                 {{ end }}
               </datalist>
               <input type="text" name="token" placeholder="Token" />
-              <button id="panchro-submit">Delete</button>
+              <button id="chromogen-submit">Delete</button>
             </form>
           </div>
         </div>
       </div>
-      <script src="{{ RootResolver .Config.StaticDir `panchro.js` }}"></script>
+      <script src="{{ RootResolver .Config.StaticDir `chromogen.js` }}"></script>
     </body>
   </html>
 {{ end }}
