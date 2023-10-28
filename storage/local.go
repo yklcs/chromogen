@@ -8,20 +8,21 @@ import (
 )
 
 type LocalStorage struct {
-	dir string
+	dir    string
+	prefix string
 }
 
-func NewLocalStorage(dir string) (*LocalStorage, error) {
-	err := os.MkdirAll(dir, 0755)
+func NewLocalStorage(dir, prefix string) (*LocalStorage, error) {
+	err := os.MkdirAll(path.Join(dir, prefix), 0755)
 	if err != nil {
 		return nil, err
 	}
 
-	return &LocalStorage{dir: dir}, nil
+	return &LocalStorage{dir: dir, prefix: prefix}, nil
 }
 
 func (s *LocalStorage) Upload(r io.Reader, fpath string) (string, error) {
-	fpathjoined := path.Join(s.dir, fpath)
+	fpathjoined := path.Join(s.dir, s.prefix, fpath)
 	f, err := os.Create(fpathjoined)
 	if err != nil {
 		return "", err
@@ -33,7 +34,7 @@ func (s *LocalStorage) Upload(r io.Reader, fpath string) (string, error) {
 		return "", err
 	}
 
-	return fpath, err
+	return path.Join(s.prefix, fpath), err
 }
 
 func (s *LocalStorage) Delete(fpath string) error {

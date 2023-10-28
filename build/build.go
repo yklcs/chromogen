@@ -55,7 +55,7 @@ func (s *StaticSiteGenerator) Build(inpaths []string) error {
 		return err
 	}
 
-	store, _ := storage.NewLocalStorage(s.outpath)
+	store, _ := storage.NewLocalStorage(s.outpath, "i")
 	err = s.photos.LoadFiles(inpaths, store)
 	if err != nil {
 		return err
