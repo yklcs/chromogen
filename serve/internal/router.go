@@ -34,7 +34,7 @@ func NewRouter(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 
 	r.Get(path.Join("/", conf.StaticDir, "*"), staticHandler.Get)
 	r.Get("/{id}", photoHandler.Get)
-	r.Get("/i/{id}.jpeg", imageHandler.Get)
+	r.Get("/i/*", imageHandler.Get)
 	r.Get("/", indexHandler.Get)
 
 	return r, nil

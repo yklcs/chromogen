@@ -31,6 +31,11 @@ type Photo struct {
 	PlaceholderURI template.URL
 	Width          int
 	Height         int
+
+	ThumbURL    string
+	ThumbPath   string
+	ThumbWidth  int
+	ThumbHeight int
 }
 
 type Exif struct {
@@ -84,6 +89,12 @@ func NewPhoto(r io.Reader, store storage.Storage) (*Photo, error) {
 		return nil, err
 	}
 	p.URL = url
+
+	var thumb bytes.Buffer
+	p.ThumbPath = p.ID + ".thumb." + p.Format
+	p.ThumbWidth, p.ThumbHeight, _ =
+		ResizeAndCompressStd(bytes.NewReader(buf.Bytes()), &thumb, 1024, 70)
+	p.ThumbURL, _ = store.Upload(bytes.NewReader(thumb.Bytes()), p.ThumbPath)
 
 	return &p, nil
 }

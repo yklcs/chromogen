@@ -29,7 +29,11 @@ func (ps *Photos) Init() error {
 			exif_iso TEXT NOT NULL,
 			exif_lensmakemodel TEXT NOT NULL,
 			exif_focallength TEXT NOT NULL,
-			exif_subjectdistance TEXT NOT NULL
+			exif_subjectdistance TEXT NOT NULL,
+			thumb_width INTEGER NOT NULL,
+			thumb_height INTEGER NOT NULL,
+			thumb_url TEXT NOT NULL,
+			thumb_path TEXT NOT NULL
 		);
 	`)
 
@@ -63,10 +67,14 @@ func (ps Photos) Set(p *Photo) {
 			exif_iso,
 			exif_lensmakemodel,
 			exif_focallength,
-			exif_subjectdistance
+			exif_subjectdistance,
+			thumb_width,
+			thumb_height,
+			thumb_url,
+			thumb_path
 		)
 		VALUES
-		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);
+		($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20);
 		`,
 		p.ID,
 		p.URL,
@@ -84,6 +92,10 @@ func (ps Photos) Set(p *Photo) {
 		p.Exif.LensMakeModel,
 		p.Exif.FocalLength,
 		p.Exif.SubjectDistance,
+		p.ThumbWidth,
+		p.ThumbHeight,
+		p.ThumbURL,
+		p.ThumbPath,
 	)
 	if err != nil {
 		log.Println(err)
@@ -134,6 +146,10 @@ func (ps Photos) Get(id string) (*Photo, error) {
 		&p.Exif.LensMakeModel,
 		&p.Exif.FocalLength,
 		&p.Exif.SubjectDistance,
+		&p.ThumbWidth,
+		&p.ThumbHeight,
+		&p.ThumbURL,
+		&p.ThumbPath,
 	)
 
 	return &p, err

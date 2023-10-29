@@ -1,10 +1,10 @@
 {{ define "thumb_img" }}
   <img
     class="thumb thumb-unloaded"
-    src="{{ RootResolver .Photo.URL }}"
+    src="{{ RootResolver .Photo.ThumbURL }}"
     alt="{{ .Photo.ID }}"
-    width="{{ .Photo.Width }}"
-    height="{{ .Photo.Height }}"
+    width="{{ .Photo.ThumbWidth }}"
+    height="{{ .Photo.ThumbHeight }}"
     loading="{{- if gt .Index 12 -}}
       lazy
     {{- else -}}
