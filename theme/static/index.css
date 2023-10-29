@@ -173,13 +173,17 @@ img.thumb.thumb-unloaded {
   --cols-min: 3;
   --cols-max: 5;
   --gap: min(1rem, 1vw);
+  --basis: 300px;
   display: grid;
   grid-template-columns: repeat(
     auto-fill,
     minmax(
       min(
         (100% - var(--cols-min) * var(--gap)) / var(--cols-min),
-        max(300px, (100% - var(--cols-max) * var(--gap)) / var(--cols-max))
+        max(
+          var(--basis),
+          (100% - var(--cols-max) * var(--gap)) / var(--cols-max)
+        )
       ),
       1fr
     )
@@ -210,22 +214,26 @@ img.thumb.thumb-unloaded {
 }
 
 .thumbs-gallery {
+  --cols-min: 1;
+  --cols-max: 3;
+  --gap: max(1rem, 2vw);
+  --basis: 500px;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(
+      min(
+        (100% - var(--cols-min) * var(--gap)) / var(--cols-min),
+        max(
+          var(--basis),
+          (100% - var(--cols-max) * var(--gap)) / var(--cols-max)
+        )
+      ),
+      1fr
+    )
+  );
   align-items: end;
-  gap: 8rem clamp(1rem, 4vw, 3rem);
-}
-@media screen and (max-width: 72rem) {
-  .thumbs-gallery {
-    grid-template-columns: 1fr 1fr;
-    row-gap: 6rem;
-  }
-}
-@media screen and (max-width: 40rem) {
-  .thumbs-gallery {
-    grid-template-columns: 1fr;
-    row-gap: 4rem;
-  }
+  gap: var(--gap);
 }
 
 .thumbs-gallery figure {

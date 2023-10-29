@@ -24,7 +24,7 @@ func LoadTheme(conf *Config) fs.FS {
 }
 
 type Theme struct {
-	staticFS     fs.FS
+	StaticFS     fs.FS
 	templatesFS  fs.FS
 	templateRoot *template.Template
 }
@@ -68,7 +68,7 @@ func NewTheme(conf *Config) (*Theme, error) {
 	}
 
 	return &Theme{
-		staticFS:     staticFS,
+		StaticFS:     staticFS,
 		templatesFS:  templatesFS,
 		templateRoot: tmpl,
 	}, err
@@ -90,7 +90,7 @@ func (t *Theme) WriteStatic(dst string) error {
 		return err
 	}
 
-	return fs.WalkDir(t.staticFS, ".", func(p string, d fs.DirEntry, err error) error {
+	return fs.WalkDir(t.StaticFS, ".", func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (t *Theme) WriteStatic(dst string) error {
 				return err
 			}
 		} else {
-			fsrc, err := t.staticFS.Open(p)
+			fsrc, err := t.StaticFS.Open(p)
 			if err != nil {
 				return err
 			}
