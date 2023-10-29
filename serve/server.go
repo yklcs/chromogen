@@ -19,7 +19,7 @@ type Server struct {
 	router *chi.Mux
 }
 
-func NewServer(port, inpath, storepath, confpath, s3url string) (*Server, error) {
+func NewServer(port, inpath, storepath, confpath string) (*Server, error) {
 	conf, err := config.ReadConfig(confpath)
 	if err != nil {
 		return nil, err

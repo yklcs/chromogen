@@ -10,16 +10,15 @@ import (
 )
 
 func Cmd(args []string) error {
-	flags := flag.NewFlagSet("build", flag.ExitOnError)
-	s3url := flags.String("s3url", "", "S3 URL root, use if S3 is behind CDN")
+	flags := flag.NewFlagSet("serve", flag.ExitOnError)
 	confpath := flags.String("c", "chromogen.json", "configuration json file path")
 	port := flags.String("p", "8000", "port")
 
 	flags.Usage = func() {
-		fmt.Fprintln(flags.Output(), "Usage: chromogen serve [...flags] <input url>")
+		fmt.Fprintln(flags.Output(), "Usage: chromogen serve [...flags] <input path>")
 		fmt.Fprintln(flags.Output(), "Flags:")
 		flags.PrintDefaults()
-		fmt.Fprintln(flags.Output(), "Example: chromogen serve  -o=output -c=config.json images")
+		fmt.Fprintln(flags.Output(), "Example: chromogen serve -p 1234 -c config.json images")
 		fmt.Fprintln(flags.Output())
 	}
 
@@ -34,7 +33,7 @@ func Cmd(args []string) error {
 	}
 
 	inpath := flags.Args()[0]
-	srv, err := NewServer(*port, inpath, "chromogen", *confpath, *s3url)
+	srv, err := NewServer(*port, inpath, "chromogen", *confpath)
 	if err != nil {
 		return err
 	}
