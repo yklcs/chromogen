@@ -3,7 +3,7 @@ package serve
 import (
 	"database/sql"
 	"net/http"
-	"strings"
+	"path"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/yklcs/chromogen/internal/config"
@@ -13,20 +13,24 @@ import (
 )
 
 type Server struct {
-	// storepath string
-	// dbpath    string
 	conf   *config.Config
 	photos *photos.Photos
 	port   string
 	router *chi.Mux
 }
 
-func NewServer(port, storepath, dbpath, confpath, s3url string) (*Server, error) {
+func NewServer(port, inpath, storepath, confpath, s3url string) (*Server, error) {
 	conf, err := config.ReadConfig(confpath)
 	if err != nil {
 		return nil, err
 	}
 
+	store, err := storage.NewLocalStorage(storepath, "i")
+	if err != nil {
+		return nil, err
+	}
+
+	dbpath := path.Join(storepath, "chromogen.db")
 	db, err := sql.Open("sqlite", dbpath)
 	if err != nil {
 		return nil, err
@@ -34,18 +38,7 @@ func NewServer(port, storepath, dbpath, confpath, s3url string) (*Server, error)
 
 	ps := &photos.Photos{DB: db}
 	ps.Init()
-
-	var store storage.Storage
-	if strings.HasPrefix(storepath, "s3://") {
-		s3path, _ := strings.CutPrefix(storepath, "s3://")
-		bucket, prefix, _ := strings.Cut(s3path, "/")
-		store, err = storage.NewS3Storage(bucket, prefix, s3url)
-	} else {
-		store, err = storage.NewLocalStorage(storepath)
-	}
-	if err != nil {
-		return nil, err
-	}
+	ps.LoadFiles([]string{inpath}, store)
 
 	srv, _ := serve.NewRouter(ps, store, conf)
 
@@ -58,10 +51,6 @@ func NewServer(port, storepath, dbpath, confpath, s3url string) (*Server, error)
 }
 
 func (srv *Server) Serve() error {
-	// err := srv.photos.Init()
-	// if err != nil {
-	// return err
-	// }
 	err := http.ListenAndServe(":"+srv.port, srv.router)
 	return err
 }

@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	"github.com/yklcs/chromogen/build"
+	"github.com/yklcs/chromogen/serve"
 )
 
 func usage() {
-	fmt.Print(`chromogen <command>
-Usage:
+	fmt.Print(`Usage: chromogen <command>
 	chromogen build		build chromogen site
+	chromogen serve		serve chromogen site
 	`)
 }
 
@@ -25,6 +26,8 @@ func main() {
 	switch strings.ToLower(os.Args[1]) {
 	case "build":
 		run = build.Cmd
+	case "serve":
+		run = serve.Cmd
 	case "help":
 		usage()
 		os.Exit(0)

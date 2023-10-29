@@ -30,6 +30,11 @@ func MatchExts(dir string, exts []string) ([]string, error) {
 }
 
 func (ps *Photos) LoadFiles(in []string, store storage.Storage) error {
+	in, err := flattenPhotoPaths(in, []string{".jpeg", ".jpg", ".png"})
+	if err != nil {
+		return err
+	}
+
 	slices.Sort(in)
 	for i, j := 0, len(in)-1; i < j; i, j = i+1, j-1 {
 		in[i], in[j] = in[j], in[i]
@@ -71,4 +76,26 @@ func (ps *Photos) LoadFiles(in []string, store storage.Storage) error {
 	}
 
 	return nil
+}
+
+func flattenPhotoPaths(dirs []string, exts []string) ([]string, error) {
+	var matched []string
+	for _, dir := range dirs {
+		err := filepath.WalkDir(dir, func(s string, d fs.DirEntry, e error) error {
+			if e != nil {
+				return e
+			}
+			if d.IsDir() {
+				return nil
+			}
+			if slices.Contains(exts, filepath.Ext(d.Name())) {
+				matched = append(matched, s)
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	return matched, nil
 }

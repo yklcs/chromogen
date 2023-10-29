@@ -2,15 +2,12 @@ package build
 
 import (
 	"database/sql"
-	"io/fs"
 	"os"
 	"path"
-	"path/filepath"
 
 	"github.com/yklcs/chromogen/internal/config"
 	"github.com/yklcs/chromogen/internal/photos"
 	"github.com/yklcs/chromogen/storage"
-	"golang.org/x/exp/slices"
 )
 
 type StaticSiteGenerator struct {
@@ -46,11 +43,6 @@ func NewStaticSiteGenerator(outpath, confpath string) (*StaticSiteGenerator, err
 func (s *StaticSiteGenerator) Build(inpaths []string) error {
 	defer s.photos.DB.Close()
 	err := s.photos.Init()
-	if err != nil {
-		return err
-	}
-
-	inpaths, err = flattenPhotoPaths(inpaths, []string{".jpg", ".jpeg", ".png"})
 	if err != nil {
 		return err
 	}
@@ -109,26 +101,4 @@ func (s *StaticSiteGenerator) Build(inpaths []string) error {
 	}
 
 	return nil
-}
-
-func flattenPhotoPaths(dirs []string, exts []string) ([]string, error) {
-	var matched []string
-	for _, dir := range dirs {
-		err := filepath.WalkDir(dir, func(s string, d fs.DirEntry, e error) error {
-			if e != nil {
-				return e
-			}
-			if d.IsDir() {
-				return nil
-			}
-			if slices.Contains(exts, filepath.Ext(d.Name())) {
-				matched = append(matched, s)
-			}
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-	}
-	return matched, nil
 }

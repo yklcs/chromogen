@@ -1,17 +1,18 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/yklcs/chromogen/internal/config"
 	"github.com/yklcs/chromogen/internal/photos"
-	"github.com/yklcs/chromogen/internal/render"
 )
 
 type PhotoHandler struct {
 	Photos *photos.Photos
 	Conf   *config.Config
+	Theme  *config.Theme
 }
 
 func (h PhotoHandler) Get(w http.ResponseWriter, r *http.Request) {
@@ -21,5 +22,10 @@ func (h PhotoHandler) Get(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "not found", http.StatusNotFound)
 		return
 	}
-	render.RenderPhoto(w, &p, h.Conf)
+
+	err = h.Theme.Render(w, "photo",
+		config.ThemeData{Photo: p, Config: h.Conf})
+	if err != nil {
+		log.Println(err)
+	}
 }
