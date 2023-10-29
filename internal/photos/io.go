@@ -52,13 +52,17 @@ func (ps *Photos) LoadFiles(in []string, store storage.Storage) error {
 				if err != nil {
 					log.Println(err)
 				}
-				p, err := NewPhoto(f, store)
-				if err != nil {
-					log.Println(err)
-				}
 
-				if _, err := ps.Get(p.ID); err != sql.ErrNoRows {
+				id := PhotoId(f)
+				var p *Photo
+				if _, err := ps.Get(id); err != sql.ErrNoRows {
 					p = nil
+				} else {
+					f.Seek(0, 0)
+					p, err = NewPhoto(f, store)
+					if err != nil {
+						log.Println(err)
+					}
 				}
 
 				f.Close()

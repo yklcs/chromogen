@@ -44,6 +44,13 @@ type Exif struct {
 	SubjectDistance string
 }
 
+func PhotoId(r io.Reader) string {
+	hash := sha256.New()
+	io.Copy(hash, r)
+	id := utils.Base58Encode(hash.Sum(nil))[:6]
+	return id
+}
+
 func NewPhoto(r io.Reader, store storage.Storage) (*Photo, error) {
 	var p Photo
 	var buf bytes.Buffer
