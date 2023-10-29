@@ -5,6 +5,7 @@ import (
 	"path"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/yklcs/chromogen/internal/config"
 	"github.com/yklcs/chromogen/internal/photos"
 	"github.com/yklcs/chromogen/serve/internal/handlers"
@@ -32,6 +33,7 @@ func NewRouter(ps *photos.Photos, store storage.Storage, conf *config.Config) (*
 		Theme:  theme,
 	}
 
+	r.Use(middleware.StripSlashes)
 	r.Get(path.Join("/", conf.StaticDir, "*"), staticHandler.Get)
 	r.Get("/{id}", photoHandler.Get)
 	r.Get("/i/*", imageHandler.Get)
