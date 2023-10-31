@@ -36,6 +36,8 @@ type Photo struct {
 	ThumbPath   string
 	ThumbWidth  int
 	ThumbHeight int
+
+	srcPath string
 }
 
 type Exif struct {

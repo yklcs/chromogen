@@ -40,10 +40,24 @@ func (ps *Photos) LoadFiles(in []string, store storage.Storage) error {
 		in[i], in[j] = in[j], in[i]
 	}
 
-	jobs := make(chan string, len(in))
-	results := make(chan *Photo, len(in))
+	var deltaPaths []string
+	for _, fpath := range in {
+		f, err := os.Open(fpath)
+		if err != nil {
+			return err
+		}
+
+		id := PhotoId(f)
+
+		if _, err := ps.Get(id); err == sql.ErrNoRows {
+			deltaPaths = append(deltaPaths, fpath)
+		}
+	}
+
+	jobs := make(chan string, len(deltaPaths))
+	results := make(chan *Photo, len(deltaPaths))
 	workers := 8
-	bar := progressbar.Default(int64(len(in)), "LoadFiles")
+	bar := progressbar.Default(int64(len(deltaPaths)), "LoadFiles")
 
 	for w := 0; w < workers; w++ {
 		go func(jobs <-chan string, results chan<- *Photo) {
@@ -52,31 +66,33 @@ func (ps *Photos) LoadFiles(in []string, store storage.Storage) error {
 				if err != nil {
 					log.Println(err)
 				}
-
-				id := PhotoId(f)
-				var p *Photo
-				if _, err := ps.Get(id); err != sql.ErrNoRows {
-					p = nil
-				} else {
-					f.Seek(0, 0)
-					p, err = NewPhoto(f, store)
-					if err != nil {
-						log.Println(err)
-					}
+				p, err := NewPhoto(f, store)
+				if err != nil {
+					log.Println(err)
 				}
-
 				f.Close()
+				p.srcPath = j
 				bar.Add(1)
 				results <- p
 			}
 		}(jobs, results)
 	}
-	for j := 0; j < len(in); j++ {
-		jobs <- in[j]
+	for j := 0; j < len(deltaPaths); j++ {
+		jobs <- deltaPaths[j]
 	}
 	close(jobs)
-	for r := 0; r < len(in); r++ {
-		ps.Set(<-results)
+
+	delta := make([]*Photo, len(deltaPaths))
+	for i := 0; i < len(deltaPaths); i++ {
+		delta[i] = <-results
+	}
+
+	slices.SortStableFunc(delta, func(a, b *Photo) bool {
+		return a.srcPath < b.srcPath
+	})
+
+	for _, d := range delta {
+		ps.Set(d)
 	}
 
 	return nil
