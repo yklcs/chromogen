@@ -7,6 +7,7 @@ import (
 
 	"github.com/yklcs/chromogen/internal/config"
 	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/internal/theme"
 	"github.com/yklcs/chromogen/storage"
 )
 
@@ -48,12 +49,12 @@ func (s *StaticSiteGenerator) Build(inpaths []string) error {
 	}
 
 	store, _ := storage.NewLocalStorage(s.outpath, "i")
-	err = s.photos.LoadFiles(inpaths, store)
+	err = s.photos.LoadFiles(inpaths, store, s.conf)
 	if err != nil {
 		return err
 	}
 
-	theme, err := config.NewTheme(s.conf)
+	siteTheme, err := theme.NewTheme(s.conf)
 	if err != nil {
 		return err
 	}
@@ -64,8 +65,8 @@ func (s *StaticSiteGenerator) Build(inpaths []string) error {
 	}
 	defer indexHTML.Close()
 
-	err = theme.Render(indexHTML, "index",
-		config.ThemeData{Photos: s.photos, Config: s.conf})
+	err = siteTheme.Render(indexHTML, "index",
+		theme.ThemeData{Photos: s.photos, Config: s.conf})
 	if err != nil {
 		return err
 	}
@@ -75,7 +76,7 @@ func (s *StaticSiteGenerator) Build(inpaths []string) error {
 	if err != nil {
 		return err
 	}
-	err = theme.WriteStatic(staticDir)
+	err = siteTheme.WriteStatic(staticDir)
 	if err != nil {
 		return err
 	}
@@ -94,7 +95,7 @@ func (s *StaticSiteGenerator) Build(inpaths []string) error {
 		defer imageHTML.Close()
 
 		p, _ := s.photos.Get(id)
-		err = theme.Render(imageHTML, "photo", config.ThemeData{Photo: p, Config: s.conf})
+		err = siteTheme.Render(imageHTML, "photo", theme.ThemeData{Photo: p, Config: s.conf})
 		if err != nil {
 			return err
 		}

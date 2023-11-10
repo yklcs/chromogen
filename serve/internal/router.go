@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/yklcs/chromogen/internal/config"
 	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/internal/theme"
 	"github.com/yklcs/chromogen/serve/internal/handlers"
 	"github.com/yklcs/chromogen/storage"
 )
@@ -15,7 +16,7 @@ import (
 func NewRouter(ps *photos.Photos, store storage.Storage, conf *config.Config) (*chi.Mux, error) {
 	r := chi.NewRouter()
 
-	theme, err := config.NewTheme(conf)
+	theme, err := theme.NewTheme(conf)
 	if err != nil {
 		return nil, err
 	}

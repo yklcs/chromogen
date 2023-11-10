@@ -1,4 +1,4 @@
-package config
+package theme
 
 import (
 	"errors"
@@ -9,11 +9,12 @@ import (
 	"path"
 	"strings"
 
+	"github.com/yklcs/chromogen/internal/config"
 	"github.com/yklcs/chromogen/internal/photos"
 	"github.com/yklcs/chromogen/theme"
 )
 
-func LoadTheme(conf *Config) fs.FS {
+func LoadTheme(conf *config.Config) fs.FS {
 	var themeFS fs.FS
 	if conf.Theme == "" {
 		return theme.FS
@@ -29,7 +30,7 @@ type Theme struct {
 	templateRoot *template.Template
 }
 
-func NewTheme(conf *Config) (*Theme, error) {
+func NewTheme(conf *config.Config) (*Theme, error) {
 	var themeFS fs.FS
 	if conf.Theme == "" {
 		themeFS = theme.FS
@@ -77,7 +78,7 @@ func NewTheme(conf *Config) (*Theme, error) {
 type ThemeData struct {
 	Photos *photos.Photos
 	Photo  *photos.Photo
-	Config *Config
+	Config *config.Config
 }
 
 func (t *Theme) Render(w io.Writer, name string, data ThemeData) error {

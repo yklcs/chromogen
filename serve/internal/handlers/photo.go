@@ -7,12 +7,13 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/yklcs/chromogen/internal/config"
 	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/internal/theme"
 )
 
 type PhotoHandler struct {
 	Photos *photos.Photos
 	Conf   *config.Config
-	Theme  *config.Theme
+	Theme  *theme.Theme
 }
 
 func (h PhotoHandler) Get(w http.ResponseWriter, r *http.Request) {
@@ -24,7 +25,7 @@ func (h PhotoHandler) Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.Theme.Render(w, "photo",
-		config.ThemeData{Photo: p, Config: h.Conf})
+		theme.ThemeData{Photo: p, Config: h.Conf})
 	if err != nil {
 		log.Println(err)
 	}

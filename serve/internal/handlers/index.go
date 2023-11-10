@@ -6,17 +6,18 @@ import (
 
 	"github.com/yklcs/chromogen/internal/config"
 	"github.com/yklcs/chromogen/internal/photos"
+	"github.com/yklcs/chromogen/internal/theme"
 )
 
 type IndexHandler struct {
 	Photos *photos.Photos
 	Conf   *config.Config
-	Theme  *config.Theme
+	Theme  *theme.Theme
 }
 
 func (h IndexHandler) Get(w http.ResponseWriter, r *http.Request) {
 	err := h.Theme.Render(w, "index",
-		config.ThemeData{Photos: h.Photos, Config: h.Conf})
+		theme.ThemeData{Photos: h.Photos, Config: h.Conf})
 	if err != nil {
 		log.Println(err)
 	}

@@ -38,7 +38,7 @@ func NewServer(port, inpath, storepath, confpath string) (*Server, error) {
 
 	ps := &photos.Photos{DB: db}
 	ps.Init()
-	ps.LoadFiles([]string{inpath}, store)
+	ps.LoadFiles([]string{inpath}, store, conf)
 
 	srv, _ := serve.NewRouter(ps, store, conf)
 

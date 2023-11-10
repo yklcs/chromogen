@@ -58,7 +58,7 @@ func PhotoId(r io.Reader) string {
 	return id
 }
 
-func NewPhoto(r io.Reader, store storage.Storage) (*Photo, error) {
+func NewPhoto(r io.Reader, store storage.Storage, thumbSize int) (*Photo, error) {
 	var p Photo
 	var buf bytes.Buffer
 

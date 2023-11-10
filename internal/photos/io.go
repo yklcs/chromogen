@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/schollz/progressbar/v3"
+	"github.com/yklcs/chromogen/internal/config"
 	"github.com/yklcs/chromogen/storage"
 	"golang.org/x/exp/slices"
 )
@@ -29,7 +30,7 @@ func MatchExts(dir string, exts []string) ([]string, error) {
 	return matched, err
 }
 
-func (ps *Photos) LoadFiles(in []string, store storage.Storage) error {
+func (ps *Photos) LoadFiles(in []string, store storage.Storage, conf *config.Config) error {
 	in, err := flattenPhotoPaths(in, []string{".jpeg", ".jpg", ".png"})
 	if err != nil {
 		return err
@@ -66,7 +67,7 @@ func (ps *Photos) LoadFiles(in []string, store storage.Storage) error {
 				if err != nil {
 					log.Println(err)
 				}
-				p, err := NewPhoto(f, store)
+				p, err := NewPhoto(f, store, conf.ThumbSize)
 				if err != nil {
 					log.Println(err)
 				}

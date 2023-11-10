@@ -18,6 +18,7 @@ type Config struct {
 	DefaultViewMode viewMode               `json:"default_view_mode"`
 	Theme           string                 `json:"theme"`
 	ThemeConfig     map[string]interface{} `json:"theme_config"`
+	ThumbSize       int                    `json:"thumb_size"`
 	StaticDir       string
 }
 
@@ -32,6 +33,10 @@ func ReadConfig(path string) (*Config, error) {
 	err = json.Unmarshal(file, c)
 	if err != nil {
 		return nil, err
+	}
+
+	if c.ThumbSize == 0 {
+		c.ThumbSize = 1024
 	}
 
 	c.StaticDir = "static"
