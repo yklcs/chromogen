@@ -2,7 +2,9 @@
 
 A static site generator for image galleries.
 
-![screenshot](.github/screenshot.png)
+[View demo at yklcs.com/photos](https://yklcs.com/photos).
+
+[![screenshot](.github/screenshot.png)](https://yklcs.com/photos)
 
 Some key features:
 
